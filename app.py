@@ -78,13 +78,15 @@ section[data-testid="stSidebar"] *{color:#f7fffa;}
 .effect-chip.positive{background:#ebf8f0;color:#0d6f41;border-color:#c0e6ce;}
 .effect-chip.negative{background:#fff1ef;color:#a32a22;border-color:#f0c9c4;}
 .effect-chip.neutral{background:#eef4ff;color:#10448d;border-color:#d5e3ff;}
-.consequence-card{color:#102118; border-radius:18px; padding:15px 16px; margin-bottom:10px; border:1px solid transparent; box-shadow:0 8px 18px rgba(14,27,20,.06);}
-.consequence-card.good{background:linear-gradient(180deg,#ebfaf1 0%,#f8fff9 100%); border-color:#bfe8d0;}
-.consequence-card.warning{background:linear-gradient(180deg,#fff8df 0%,#fffdf4 100%); border-color:#eed36d;}
-.consequence-card.danger{background:linear-gradient(180deg,#fff0ee 0%,#fff9f8 100%); border-color:#ebb2ac;}
-.consequence-card .cons-title{font-weight:800; font-size:14px; color:#102118;}
-.consequence-card .cons-desc{font-size:13px; color:#344840; line-height:1.45; margin:6px 0;}
-.consequence-card .cons-meta{display:inline-flex;gap:8px;align-items:center;padding:5px 9px;border-radius:999px;background:rgba(16,33,24,.07);font-size:11px;font-weight:800;color:#20372e;}
+.consequence-wrap{background:linear-gradient(180deg,#ffffff 0%,#f3fbf5 100%);border:1px solid rgba(8,79,43,.16);box-shadow:var(--shadow);border-radius:22px;padding:16px 16px 8px 16px;margin:14px 0 18px 0;}
+.consequence-card{color:#0b1f17; border-radius:18px; padding:15px 16px; margin-bottom:10px; border:1px solid transparent; box-shadow:0 8px 18px rgba(14,27,20,.06);}
+.consequence-card.good{background:linear-gradient(180deg,#ddf7e8 0%,#f8fffb 100%); border-color:#94d7b1;}
+.consequence-card.warning{background:linear-gradient(180deg,#fff1b8 0%,#fffbe8 100%); border-color:#d2a401;}
+.consequence-card.danger{background:linear-gradient(180deg,#ffd7d0 0%,#fff7f5 100%); border-color:#d96a5e;}
+.consequence-card .cons-title{font-weight:900; font-size:14px; color:#081c15;}
+.consequence-card .cons-desc{font-size:13px; color:#213d33; line-height:1.5; margin:6px 0;}
+.consequence-card .cons-meta{display:inline-flex;gap:8px;align-items:center;padding:6px 10px;border-radius:999px;background:rgba(8,28,21,.08);font-size:11px;font-weight:900;color:#163128;}
+.consequence-head{font-size:15px;font-weight:900;color:#084f2b;margin:0 0 10px 0;display:flex;align-items:center;gap:8px;}
 .achievement{display:inline-block; padding:8px 12px; border-radius:999px; margin:4px; background:linear-gradient(135deg,#0c5a39 0%, #0a4ea3 100%); color:white; font-size:12px; font-weight:800;}
 .region-row{margin-bottom:10px;}
 .success-strip{background:linear-gradient(135deg,#0d6b41 0%,#18a05d 100%); color:white; padding:15px 18px; border-radius:16px; font-weight:700; box-shadow:var(--shadow);}
@@ -269,14 +271,14 @@ def chip(text: str) -> str:
 
 
 EVENT_OPENERS = {
-    "midia": ["Plantão de campanha", "No radar nacional", "A lente virou para você", "Em horário nobre", "No centro da narrativa"],
-    "politica": ["Bastidor em ebulição", "Telefone quente", "O tabuleiro mexeu", "Pressão de gabinete", "A articulação apertou"],
-    "financas": ["Conta na mesa", "Planilha aberta", "A operação cobrou", "No caixa e no cronograma", "A campanha pede combustível"],
+    "midia": ["Plantão de campanha", "No radar nacional", "A lente virou para você", "Em horário nobre", "No centro da narrativa", "A vitrine ficou nacional", "O foco da cobertura mudou", "Seu nome entrou no noticiário pesado"],
+    "politica": ["Bastidor em ebulição", "Telefone quente", "O tabuleiro mexeu", "Pressão de gabinete", "A articulação apertou", "A base rangeu", "A costura política esquentou", "O bastidor amanheceu tenso"],
+    "financas": ["Conta na mesa", "Planilha aberta", "A operação cobrou", "No caixa e no cronograma", "A campanha pede combustível", "O financeiro chamou para conversar", "Os boletos bateram na porta", "Caixa, rota e custo entraram na pauta"],
     "energia": ["Fôlego em cheque", "O corpo respondeu", "Agenda no limite", "Ritmo de maratona", "O cansaço bateu na porta"],
     "digital": ["O feed incendiou", "Na guerra dos cortes", "O algoritmo sentiu", "Timeline em ebulição", "Nas trincheiras do celular"],
     "juridico": ["Sinal amarelo no TSE", "Na mira do regulamento", "Um passo em falso custa caro", "A caneta está por perto", "O jurídico entrou no campo"],
     "pesquisa": ["Novo retrato da disputa", "O humor do eleitor mudou", "Saiu a fotografia da semana", "Pesquisa na rua", "Os números falaram"],
-    "all": ["O dia virou", "Nova frente de batalha", "A campanha respirou fundo", "Um movimento abriu outra janela", "A próxima jogada chegou"],
+    "all": ["O dia virou", "Nova frente de batalha", "A campanha respirou fundo", "Um movimento abriu outra janela", "A próxima jogada chegou", "O roteiro do dia mudou", "A disputa entrou em outra faixa", "Veio mais uma curva na campanha"],
 }
 
 DECISION_PROMPTS = [
@@ -286,6 +288,20 @@ DECISION_PROMPTS = [
     "Qual tom a campanha vai escolher?",
     "Onde você quer bater ou segurar?",
     "Que resposta você coloca na rua?",
+    "Qual é a jogada mais inteligente neste cenário?",
+    "Como você vira essa pressão a seu favor?",
+    "O que sua campanha decide fazer primeiro?",
+    "Qual linha você assume daqui para frente?",
+    "Que tipo de resposta cabe neste momento?",
+    "Como você administra esse desgaste sem perder tração?",
+    "Onde vale acelerar e onde vale recuar?",
+    "Que decisão segura melhor sua narrativa?",
+    "Qual é seu próximo passo público?",
+    "Como você atua sem parecer improviso?",
+    "Que caminho dá mais impacto com menos dano?",
+    "Qual postura você coloca no centro da campanha?",
+    "O que você manda para rua, imprensa e aliados?",
+    "Qual estratégia passa mais confiança ao eleitor agora?",
 ]
 
 
@@ -1802,7 +1818,7 @@ def build_share_payload():
         "telegram": f"https://t.me/share/url?url=&text={quote(short_text)}",
         "x": f"https://twitter.com/intent/tweet?text={quote(short_text)}",
     }
-    badges = [("Resultado", "Vitória" if s.victory else "Derrota"), ("Turno", turno), ("Score", str(score))]
+    badges = [("Resultado", "Vitória" if s.victory else "Derrota"), ("Turno", turno)]
     return short_text, urls, badges, score
 
 
@@ -1843,19 +1859,25 @@ def build_share_card_svg():
     return svg.encode("utf-8")
 
 
+def svg_bytes_to_data_uri(svg_bytes: bytes) -> str:
+    return "data:image/svg+xml;base64," + base64.b64encode(svg_bytes).decode("ascii")
+
+
 def render_share_panel():
     summary, urls, badges, score = build_share_payload()
     svg_bytes = build_share_card_svg()
+    svg_uri = svg_bytes_to_data_uri(svg_bytes)
     st.markdown("### 📣 Compartilhe sua campanha")
-    left, right = st.columns([1.15, 0.85])
+    left, right = st.columns([1.2, 0.8])
     with left:
-        st.markdown("<div class='share-preview'>", unsafe_allow_html=True)
-        st.image(svg_bytes, use_container_width=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-        st.download_button("🖼️ Baixar card de compartilhamento (SVG)", data=svg_bytes, file_name="card_candidato_2026.svg", mime="image/svg+xml", use_container_width=True)
+        st.markdown(
+            f"<div class='share-preview'><img src='{svg_uri}' style='width:100%;display:block;border-radius:16px' alt='Card de compartilhamento da campanha'></div>",
+            unsafe_allow_html=True,
+        )
+        st.download_button("🖼️ Baixar card de compartilhamento", data=svg_bytes, file_name="card_candidato_2026.svg", mime="image/svg+xml", use_container_width=True)
     with right:
         badge_html = ''.join([f"<span class='share-mini'>{k}: <strong>{v}</strong></span>" for k,v in badges])
-        st.markdown("<div class='share-card'><h4 style='margin-top:0'>Resumo rápido</h4>" + badge_html + "<div style='margin-top:12px' class='small-muted'>Imagem pronta para postar. O texto abaixo já está simplificado para acompanhar o card.</div></div>", unsafe_allow_html=True)
+        st.markdown("<div class='share-card'><h4 style='margin-top:0'>Resumo rápido</h4>" + badge_html + "<div style='margin-top:12px' class='small-muted'>Card pronto para postar. O texto ficou curto de propósito para viralizar melhor.</div></div>", unsafe_allow_html=True)
         st.markdown(f"<div class='share-box'>{summary}</div>", unsafe_allow_html=True)
         b1,b2,b3 = st.columns(3)
         with b1:
@@ -1976,8 +1998,8 @@ def main():
     st.markdown(
         f"""
         <div class="hero">
-            <h1>🇧🇷 Corrida ao Planalto • V8</h1>
-            <p>Dia {st.session_state.day} de {st.session_state.total_days} • {PARTIES[st.session_state.party]['nome']} • {ADVISORS[st.session_state.advisor]['nome']}</p>
+            <h1>🇧🇷 Corrida ao Planalto • V9</h1>
+            <p>Dia {min(st.session_state.day, st.session_state.total_days)} de {st.session_state.total_days} • {PARTIES[st.session_state.party]['nome']} • {ADVISORS[st.session_state.advisor]['nome']}</p>
         </div>
         """,
         unsafe_allow_html=True,
