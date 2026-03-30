@@ -11,7 +11,7 @@ import streamlit as st
 # CONFIGURAÇÃO
 # =========================================================
 st.set_page_config(
-    page_title="🇧🇷 Candidato 2026: Viral Master V5",
+    page_title="🇧🇷 Candidato 2026: Brasil em Jogo V6",
     page_icon="🗳️",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -20,80 +20,67 @@ st.set_page_config(
 STYLE = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
-.main { background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%); }
-.block-container { padding-top: 1.2rem; padding-bottom: 2rem; }
+:root{
+    --bg:#f5f7f4;
+    --panel:#ffffff;
+    --ink:#102219;
+    --muted:#486154;
+    --green:#0f5f3d;
+    --green-2:#12824f;
+    --yellow:#f2c94c;
+    --yellow-2:#d9a404;
+    --blue:#0a4ea3;
+    --blue-2:#173d7a;
+    --red:#c53a2f;
+    --shadow:0 14px 34px rgba(16,34,25,.10);
+    --shadow-strong:0 18px 42px rgba(10,78,163,.18);
+    --border:1px solid rgba(16,34,25,.08);
+}
+html, body, [class*="css"] { font-family: 'Inter', sans-serif; color:var(--ink); }
+body{background:var(--bg);}
+.main { background: radial-gradient(circle at top, #f8fbf6 0%, #eef4ef 55%, #edf2f8 100%); }
+.block-container { padding-top: 1.1rem; padding-bottom: 2rem; max-width: 1380px; }
+section[data-testid="stSidebar"]{background: linear-gradient(180deg, #0c5a39 0%, #083b59 100%);}
+section[data-testid="stSidebar"] *{ color:#f8fffb; }
 .hero{
-    background: linear-gradient(135deg, #0f172a 0%, #172554 42%, #1d4ed8 100%);
-    color:white; border-radius:24px; padding:28px; margin-bottom:16px;
-    box-shadow:0 16px 48px rgba(15,23,42,.22);
+    background: linear-gradient(120deg, rgba(9,81,57,.98) 0%, rgba(15,95,61,.98) 36%, rgba(242,201,76,.97) 36.5%, rgba(242,201,76,.97) 54%, rgba(10,78,163,.98) 54.5%, rgba(23,61,122,.98) 100%);
+    color:white; border-radius:28px; padding:30px 30px 26px 30px; margin-bottom:18px;
+    box-shadow:var(--shadow-strong); position:relative; overflow:hidden;
 }
-.hero h1{margin:0 0 6px 0; font-size:2.2rem;}
-.hero p{margin:0; opacity:.92;}
-.panel{
-    background:white; border-radius:18px; padding:18px;
-    border:1px solid rgba(99,102,241,.08);
-    box-shadow:0 10px 28px rgba(15,23,42,.08);
-}
-.metric-card{
-    background:linear-gradient(135deg,#111827 0%,#1f2937 100%);
-    color:white; border-radius:18px; padding:16px; min-height:110px;
-    box-shadow:0 10px 26px rgba(0,0,0,.18);
-}
-.metric-card h4{margin:0; opacity:.78; font-size:12px; text-transform:uppercase; letter-spacing:.08em;}
-.metric-card h2{margin:8px 0 6px 0; font-size:30px;}
-.metric-card span{font-size:12px; opacity:.9;}
-.event-box{
-    background:linear-gradient(135deg,#fff 0%,#f8fafc 100%);
-    border-left:8px solid #2563eb;
-    border-radius:22px; padding:24px; margin-bottom:18px;
-    box-shadow:0 12px 34px rgba(15,23,42,.10);
-}
-.event-crisis{border-left-color:#dc2626;}
-.event-good{border-left-color:#16a34a;}
-.event-followup{border-left-color:#7c3aed;}
-.choice-box{
-    background:#fff; border:1px solid #e5e7eb; border-radius:16px; padding:14px;
-    box-shadow:0 6px 18px rgba(15,23,42,.05); margin-bottom:10px;
-}
-.choice-title{font-weight:700; color:#111827; margin-bottom:6px;}
-.small-muted{color:#64748b; font-size:13px;}
-.tag{
-    display:inline-block; padding:6px 10px; border-radius:999px; font-size:11px;
-    font-weight:700; margin-right:6px; margin-top:8px;
-}
-.tag-blue{background:#dbeafe;color:#1d4ed8;}
-.tag-red{background:#fee2e2;color:#b91c1c;}
-.tag-green{background:#dcfce7;color:#166534;}
-.tag-purple{background:#ede9fe;color:#6d28d9;}
-.effect-chip{
-    display:inline-flex; align-items:center; gap:6px; padding:7px 10px; border-radius:999px;
-    font-size:12px; font-weight:700; margin:4px 5px 0 0; background:#f3f4f6; color:#111827;
-}
-.consequence-card{
-    background:linear-gradient(135deg,#fff7ed 0%,#fffbeb 100%);
-    border:1px solid #fed7aa; border-radius:16px; padding:14px; margin-bottom:10px;
-}
-.achievement{
-    display:inline-block; padding:8px 12px; border-radius:999px; margin:4px;
-    background:linear-gradient(135deg,#a855f7 0%,#ec4899 100%); color:white;
-    font-size:12px; font-weight:700;
-}
+.hero:before{content:""; position:absolute; inset:auto -40px -55px auto; width:220px; height:220px; border-radius:50%; background:rgba(255,255,255,.10);}
+.hero h1{margin:0 0 6px 0; font-size:2.25rem; letter-spacing:-.02em;}
+.hero p{margin:0; opacity:.96; max-width:900px;}
+.panel{background:linear-gradient(180deg,#ffffff 0%, #fbfdfb 100%); border-radius:20px; padding:18px; border:var(--border); box-shadow:var(--shadow);}
+.metric-card{background:linear-gradient(160deg, #ffffff 0%, #f8fbf6 100%); color:var(--ink); border-radius:20px; padding:16px; min-height:118px; box-shadow:var(--shadow); border-top:5px solid var(--green);}
+.metric-card.card-gold{border-top-color:var(--yellow-2);}
+.metric-card.card-blue{border-top-color:var(--blue);}
+.metric-card.card-red{border-top-color:var(--red);}
+.metric-card h4{margin:0; color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.10em;}
+.metric-card h2{margin:8px 0 6px 0; font-size:28px; line-height:1.05; color:var(--ink);}
+.metric-card span{font-size:12px; color:var(--muted);}
+.event-box{background:linear-gradient(180deg,#ffffff 0%,#fbfdfb 100%); border-left:10px solid var(--blue); border-radius:24px; padding:24px; margin-bottom:18px; box-shadow:var(--shadow); border:var(--border);}
+.event-crisis{border-left-color:var(--red);}
+.event-good{border-left-color:var(--green-2);}
+.event-followup{border-left-color:var(--yellow-2);}
+.choice-box{background:#fff; border:1px solid rgba(16,34,25,.10); border-radius:18px; padding:16px; box-shadow:0 8px 20px rgba(16,34,25,.05); margin-bottom:12px;}
+.choice-title{font-weight:800; color:var(--ink); margin-bottom:6px; font-size:1rem;}
+.small-muted{color:var(--muted); font-size:13px;}
+.tag{display:inline-block; padding:6px 11px; border-radius:999px; font-size:11px; font-weight:800; margin-right:6px; margin-top:8px; border:1px solid transparent;}
+.tag-blue{background:#e6f0ff;color:#0c4ca0;border-color:#bdd5ff;}
+.tag-red{background:#fff0ef;color:#a52b23;border-color:#f1c4bf;}
+.tag-green{background:#eaf8f1;color:#0f6f42;border-color:#bfe7cf;}
+.tag-purple{background:#fff7db;color:#8a5b00;border-color:#f1dfa1;}
+.effect-chip{display:inline-flex; align-items:center; gap:6px; padding:7px 10px; border-radius:999px; font-size:12px; font-weight:800; margin:4px 6px 0 0; background:#eef4ef; color:var(--ink); border:1px solid rgba(16,34,25,.07);}
+.consequence-card{background:linear-gradient(180deg,#fff9e8 0%,#fffdf3 100%); border:1px solid #efd889; border-radius:18px; padding:14px; margin-bottom:10px;}
+.achievement{display:inline-block; padding:8px 12px; border-radius:999px; margin:4px; background:linear-gradient(135deg,#0c5a39 0%, #0a4ea3 100%); color:white; font-size:12px; font-weight:800;}
 .region-row{margin-bottom:10px;}
-.success-strip{
-    background:linear-gradient(135deg,#22c55e 0%,#16a34a 100%);
-    color:white; padding:14px 16px; border-radius:14px; font-weight:600;
-}
-.warning-strip{
-    background:linear-gradient(135deg,#ef4444 0%,#dc2626 100%);
-    color:white; padding:14px 16px; border-radius:14px; font-weight:600;
-}
-.stButton>button{
-    border-radius:12px !important; font-weight:700 !important; border:0 !important;
-    background:linear-gradient(135deg,#2563eb 0%,#7c3aed 100%) !important; color:white !important;
-    box-shadow:0 8px 18px rgba(59,130,246,.25) !important;
-}
-.stButton>button:hover{transform:translateY(-1px);}
+.success-strip{background:linear-gradient(135deg,#0d6b41 0%,#18a05d 100%); color:white; padding:15px 18px; border-radius:16px; font-weight:700; box-shadow:var(--shadow);}
+.warning-strip{background:linear-gradient(135deg,#b53328 0%,#df5144 100%); color:white; padding:15px 18px; border-radius:16px; font-weight:700; box-shadow:var(--shadow);}
+.transition-strip{background:linear-gradient(135deg,#0a4ea3 0%,#173d7a 100%); color:white; padding:15px 18px; border-radius:16px; font-weight:700; box-shadow:var(--shadow);}
+.stButton>button{border-radius:14px !important; font-weight:800 !important; border:0 !important; padding:.7rem 1rem !important; background:linear-gradient(135deg,#0f5f3d 0%,#0a4ea3 100%) !important; color:white !important; box-shadow:0 10px 22px rgba(10,78,163,.20) !important;}
+.stButton>button:hover{transform:translateY(-1px); filter:saturate(1.05);}
+.stSelectbox label, .stNumberInput label{font-weight:700 !important; color:var(--ink) !important;}
+hr{border-color:rgba(16,34,25,.08);}
 </style>
 """
 st.markdown(STYLE, unsafe_allow_html=True)
@@ -890,6 +877,59 @@ def build_events() -> List[EventCard]:
 
 EVENTS = build_events()
 
+TRANSITION_EVENTS = [
+    {
+        "id": "montar_ministerio",
+        "title": "🧩 Montagem dos ministérios",
+        "desc": "A transição exige definir nomes. Técnica pura aumenta credibilidade; loteamento puro aumenta governabilidade no curtíssimo prazo.",
+        "options": [
+            {"text": "Montar equipe técnica com nomes fortes", "summary": "Você ganhou confiança pública, mas abriu ruído com a base.", "effects": {"approval": 5, "cabinet": 8, "congress": -4, "stability": 3}},
+            {"text": "Dividir espaço entre técnica e articulação", "summary": "Equilíbrio bom para iniciar sem explodir pontes.", "effects": {"approval": 3, "cabinet": 4, "congress": 3, "stability": 4}},
+            {"text": "Entregar pastas-chave à coalizão", "summary": "Você comprou paz temporária, mas a imagem de independência sofreu.", "effects": {"approval": -2, "cabinet": -1, "congress": 8, "stability": 1}},
+        ],
+    },
+    {
+        "id": "pec_transicao",
+        "title": "📜 Pressão por pacote fiscal e espaço no orçamento",
+        "desc": "Antes mesmo da posse, o mercado, governadores e aliados querem saber se haverá disciplina ou expansão sem freio.",
+        "options": [
+            {"text": "Anunciar âncora fiscal com transição gradual", "summary": "Você soou adulto e reduziu a ansiedade do sistema.", "effects": {"approval": 3, "fiscal": 6, "congress": -1, "stability": 4}},
+            {"text": "Prometer muito gasto para acelerar popularidade", "summary": "A base vibrou, mas o ruído econômico subiu.", "effects": {"approval": 4, "fiscal": -7, "congress": 2, "stability": -4}},
+            {"text": "Empurrar a definição para depois da posse", "summary": "Você ganhou tempo, mas o ambiente ficou mais nervoso.", "effects": {"approval": -1, "fiscal": -2, "congress": -1, "stability": -2}},
+        ],
+    },
+    {
+        "id": "presidentes_camara_senado",
+        "title": "🏛️ Eleição das mesas do Congresso",
+        "desc": "Sem ponte com Câmara e Senado, seu governo nasce mancando.",
+        "options": [
+            {"text": "Negociar desde já uma maioria pragmática", "summary": "Você pavimentou governabilidade, mesmo pagando um preço político.", "effects": {"approval": 0, "congress": 8, "stability": 5, "cabinet": -1}},
+            {"text": "Apostar na pressão popular contra o Centrão", "summary": "Mobiliza a rua, mas é arriscado como estratégia única.", "effects": {"approval": 4, "congress": -6, "stability": -3}},
+            {"text": "Costurar um acordo silencioso e institucional", "summary": "Menos barulho, mais chance de nascer governando.", "effects": {"approval": 2, "congress": 5, "stability": 4}},
+        ],
+    },
+    {
+        "id": "crise_pre_posse",
+        "title": "🚨 Crise antes da posse",
+        "desc": "Uma declaração de aliado, um ruído externo e uma cobrança social explodem ao mesmo tempo na transição.",
+        "options": [
+            {"text": "Assumir comando e responder em cadeia nacional", "summary": "Você mostrou autoridade e evitou sensação de vazio.", "effects": {"approval": 5, "stability": 5, "energy_transition": -2}},
+            {"text": "Deixar ministros indicados falarem por você", "summary": "Profissionaliza a resposta, mas pode passar imagem fria.", "effects": {"approval": 1, "cabinet": 3, "stability": 2}},
+            {"text": "Minimizar e tocar a transição normalmente", "summary": "Economiza curto prazo, mas o problema pode crescer.", "effects": {"approval": -4, "stability": -5, "congress": -2}},
+        ],
+    },
+    {
+        "id": "primeiras_metas",
+        "title": "🎯 Definição das prioridades dos 100 primeiros dias",
+        "desc": "Seu governo será lido pelas primeiras cinco medidas, não pelo discurso da vitória.",
+        "options": [
+            {"text": "Escolher 3 metas claras e executáveis", "summary": "Pouco glamour, muita chance de começar entregando.", "effects": {"approval": 4, "stability": 4, "cabinet": 2, "fiscal": 2}},
+            {"text": "Lançar um pacote enorme para impressionar", "summary": "Impacta no anúncio, complica na execução.", "effects": {"approval": 3, "fiscal": -5, "stability": -2, "cabinet": -1}},
+            {"text": "Segurar anúncios e mapear gargalos reais", "summary": "Técnico e prudente, mas menos emocionante para a rua.", "effects": {"approval": -1, "fiscal": 3, "cabinet": 3, "stability": 3}},
+        ],
+    },
+]
+
 # =========================================================
 # ESTADO
 # =========================================================
@@ -939,6 +979,17 @@ def init_state(force: bool = False):
         "difficulty": "Normal",
         "seed": 2026,
         "post_presidency_mode": False,
+        "transition_started": False,
+        "transition_over": False,
+        "transition_day": 1,
+        "transition_total_days": 5,
+        "transition_event": None,
+        "transition_history": [],
+        "approval": 55.0,
+        "fiscal": 48.0,
+        "congress": 44.0,
+        "cabinet": 46.0,
+        "stability": 50.0,
     }
     for key, value in defaults.items():
         if force or key not in st.session_state:
@@ -1386,30 +1437,79 @@ def next_day(option: Option):
         generate_event()
 
 
+
+
+def start_transition():
+    s = st.session_state
+    s.transition_started = True
+    s.post_presidency_mode = True
+    s.transition_over = False
+    s.transition_day = 1
+    s.transition_history = []
+    s.approval = clamp(52 + (s.intent - s.rejection) * 0.35 + s.credibility * 0.08, 35, 78)
+    s.fiscal = clamp(45 + s.credibility * 0.10 - s.risk * 0.08, 20, 80)
+    s.congress = clamp((s.governabilidade * 0.55 + s.allies * 0.45), 20, 85)
+    s.cabinet = clamp(48 + (s.credibility * 0.12), 30, 85)
+    s.stability = clamp(45 + s.governabilidade * 0.20 + s.credibility * 0.10 - s.rejection * 0.08, 20, 85)
+    generate_transition_event()
+
+
+def generate_transition_event():
+    used = {row["id"] for row in st.session_state.transition_history}
+    pool = [e for e in TRANSITION_EVENTS if e["id"] not in used]
+    if not pool:
+        st.session_state.transition_over = True
+        st.session_state.transition_event = None
+        return
+    st.session_state.transition_event = random.choice(pool)
+
+
+def next_transition_day(option: dict):
+    s = st.session_state
+    eff = option.get("effects", {})
+    s.approval = clamp(s.approval + eff.get("approval", 0), 0, 100)
+    s.fiscal = clamp(s.fiscal + eff.get("fiscal", 0), 0, 100)
+    s.congress = clamp(s.congress + eff.get("congress", 0), 0, 100)
+    s.cabinet = clamp(s.cabinet + eff.get("cabinet", 0), 0, 100)
+    s.stability = clamp(s.stability + eff.get("stability", 0), 0, 100)
+    s.energy = clamp(s.energy + eff.get("energy_transition", 0), 0, 100)
+    s.transition_history.append({"dia": s.transition_day, "id": s.transition_event["id"], "evento": s.transition_event["title"], "decisao": option["text"]})
+    s.transition_day += 1
+    if s.transition_day > s.transition_total_days:
+        s.transition_over = True
+        s.transition_event = None
+    else:
+        generate_transition_event()
+
+
+def readiness_score():
+    s = st.session_state
+    return clamp(s.approval * 0.24 + s.fiscal * 0.18 + s.congress * 0.24 + s.cabinet * 0.16 + s.stability * 0.18, 0, 100)
+
 # =========================================================
 # UI
 # =========================================================
 def render_metric_cards():
     c1, c2, c3, c4, c5, c6 = st.columns(6)
     cards = [
-        (c1, "INTENÇÃO", f"{st.session_state.intent:.1f}%", "Pesquisa do dia"),
-        (c2, "REJEIÇÃO", f"{st.session_state.rejection:.1f}%", "Quanto menor, melhor"),
-        (c3, "CAIXA", fmt_money(st.session_state.cash), "Operação viva"),
-        (c4, "MÍDIA", f"{st.session_state.media:.0f}", "TV, rádio e corte"),
-        (c5, "RISCO", f"{st.session_state.risk:.0f}%", "Jurídico e crise"),
-        (c6, "ENERGIA", f"{st.session_state.energy:.0f}%", "Fôlego real"),
+        (c1, "INTENÇÃO", f"{st.session_state.intent:.1f}%", "Pesquisa do dia", ""),
+        (c2, "REJEIÇÃO", f"{st.session_state.rejection:.1f}%", "Quanto menor, melhor", "card-red"),
+        (c3, "CAIXA", fmt_money(st.session_state.cash), "Operação viva", "card-gold"),
+        (c4, "MÍDIA", f"{st.session_state.media:.0f}", "TV, rádio e corte", "card-blue"),
+        (c5, "RISCO", f"{st.session_state.risk:.0f}%", "Jurídico e crise", "card-red"),
+        (c6, "ENERGIA", f"{st.session_state.energy:.0f}%", "Fôlego real", "card-gold"),
     ]
-    for col, title, value, desc in cards:
+    for col, title, value, desc, klass in cards:
         with col:
             st.markdown(
-                f"<div class='metric-card'><h4>{title}</h4><h2>{value}</h2><span>{desc}</span></div>",
+                f"<div class='metric-card {klass}'><h4>{title}</h4><h2>{value}</h2><span>{desc}</span></div>",
                 unsafe_allow_html=True
             )
 
 
 def sidebar_panel():
     with st.sidebar:
-        st.markdown("## 🎛️ Painel da campanha")
+        st.markdown("## 🇧🇷 Painel da campanha")
         st.caption(f"Seed: {st.session_state.get('seed', '-')}")
         if st.session_state.started:
             st.write(f"**Dia:** {st.session_state.day}/{st.session_state.total_days}")
@@ -1455,13 +1555,14 @@ def render_charts():
 
     with left:
         fig = go.Figure()
-        fig.add_trace(go.Scatter(x=st.session_state.day_history, y=st.session_state.poll_history, mode="lines+markers", name="Intenção"))
-        fig.add_trace(go.Scatter(x=st.session_state.day_history, y=st.session_state.rej_history, mode="lines+markers", name="Rejeição"))
+        fig.add_trace(go.Scatter(x=st.session_state.day_history, y=st.session_state.poll_history, mode="lines+markers", name="Intenção", line=dict(color="#0f5f3d", width=4), marker=dict(color="#0f5f3d", size=7)))
+        fig.add_trace(go.Scatter(x=st.session_state.day_history, y=st.session_state.rej_history, mode="lines+markers", name="Rejeição", line=dict(color="#c53a2f", width=3), marker=dict(color="#c53a2f", size=6)))
         fig.update_layout(
             height=320,
             margin=dict(l=10, r=10, t=35, b=10),
             title="Termômetro eleitoral",
             legend=dict(orientation="h"),
+            paper_bgcolor="#ffffff", plot_bgcolor="#ffffff",
         )
         st.plotly_chart(fig, use_container_width=True)
 
@@ -1478,14 +1579,14 @@ def render_charts():
     l2, r2 = st.columns([1.25, 1])
     with l2:
         fig2 = go.Figure()
-        fig2.add_trace(go.Scatter(x=st.session_state.day_history, y=st.session_state.cash_history, mode="lines+markers", name="Caixa"))
-        fig2.update_layout(height=280, margin=dict(l=10, r=10, t=35, b=10), title="Pulso do caixa")
+        fig2.add_trace(go.Scatter(x=st.session_state.day_history, y=st.session_state.cash_history, mode="lines+markers", name="Caixa", line=dict(color="#d9a404", width=4), marker=dict(color="#d9a404", size=7)))
+        fig2.update_layout(height=280, margin=dict(l=10, r=10, t=35, b=10), title="Pulso do caixa", paper_bgcolor="#ffffff", plot_bgcolor="#ffffff")
         st.plotly_chart(fig2, use_container_width=True)
     with r2:
         st.markdown("<div class='panel'><h4 style='margin-top:0'>Segmentos eleitorais</h4>", unsafe_allow_html=True)
         for seg, value in st.session_state.segments.items():
             st.markdown(
-                f"<div class='region-row'><div style='display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px'><span><strong>{SEGMENTS[seg]['nome']}</strong></span><span>{value:.1f}%</span></div><div style='background:#e5e7eb;border-radius:999px;height:10px;overflow:hidden'><div style='background:#7c3aed;width:{max(1, value)}%;height:10px;border-radius:999px'></div></div></div>",
+                f"<div class='region-row'><div style='display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px'><span><strong>{SEGMENTS[seg]['nome']}</strong></span><span>{value:.1f}%</span></div><div style='background:#e5e7eb;border-radius:999px;height:10px;overflow:hidden'><div style='background:#0a4ea3;width:{max(1, value)}%;height:10px;border-radius:999px'></div></div></div>",
                 unsafe_allow_html=True,
             )
         st.markdown("</div>", unsafe_allow_html=True)
@@ -1560,8 +1661,8 @@ def render_start_screen():
     st.markdown(
         f"""
         <div class="hero">
-            <h1>🇧🇷 Candidato 2026: Viral Master V5</h1>
-            <p>45 turnos, caixa e energia equilibrados, consequências persistentes, mais de 50 eventos únicos e sem repetição durante a campanha.</p>
+            <h1>🇧🇷 Candidato 2026: Brasil em Jogo V6</h1>
+            <p>45 turnos, contraste inspirado no Brasil, consequências persistentes, mais de 50 eventos únicos e gancho real para a transição de governo.</p>
         </div>
         """,
         unsafe_allow_html=True,
@@ -1578,14 +1679,16 @@ def render_start_screen():
         difficulty = st.selectbox("Dificuldade", options=["Fácil", "Normal", "Difícil", "Hardcore"], index=1)
         seed = st.number_input("Seed da campanha", min_value=1, max_value=999999, value=2026, step=1)
 
-    st.markdown("### O que muda nesta versão")
+    st.markdown("### O que muda nesta V6")
     st.markdown(
         "- Mais de **50 eventos únicos** na rotação normal.\n"
         "- **45 turnos sem repetição** do mesmo evento.\n"
         "- **Energia e caixa** com consumo realista.\n"
         "- **Consequências persistentes** e follow-ups.\n"
         "- **Regiões, segmentos, mídia, aliados e risco jurídico** integrados.\n"
-        "- **1º e 2º turno** com voto útil na reta final."
+        "- **1º e 2º turno** com voto útil na reta final.\n"
+        "- **Visual com contraste Brasil**: verde, amarelo e azul mais limpos.\n"
+        "- **Transição pós-vitória** para começar a evolução presidencial."
     )
     if st.button("🚀 Iniciar campanha", use_container_width=True):
         start_campaign(party, advisor, difficulty, int(seed))
@@ -1610,13 +1713,79 @@ def render_result():
 
     if st.session_state.victory:
         st.markdown(
-            "<div class='panel'><strong>Gancho para a próxima evolução:</strong> esta base já deixa preparado o terreno para um modo pós-eleição com governabilidade, ministérios, crise no Congresso, orçamento e popularidade de governo.</div>",
+            "<div class='panel'><strong>Modo transição liberado:</strong> agora dá para começar a alinhar ministérios, orçamento, Congresso e estabilidade antes da posse.</div>",
             unsafe_allow_html=True,
         )
+        col_a, col_b = st.columns([1,1])
+        with col_a:
+            if st.button("🏛️ Iniciar transição de governo", use_container_width=True):
+                start_transition()
+                st.rerun()
+        with col_b:
+            st.markdown(f"<div class='transition-strip'>Prontidão inicial estimada: <strong>{readiness_score():.1f}/100</strong></div>", unsafe_allow_html=True)
 
     if st.button("🔁 Jogar novamente", use_container_width=True):
         init_state(True)
         st.rerun()
+
+
+def render_transition_mode():
+    st.markdown(
+        f"""
+        <div class="hero">
+            <h1>🏛️ Transição de Governo</h1>
+            <p>Etapa {st.session_state.transition_day} de {st.session_state.transition_total_days} • Agora o jogo mede prontidão para governar: Congresso, gabinete, espaço fiscal, estabilidade e aprovação inicial.</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    c1, c2, c3, c4, c5 = st.columns(5)
+    cards = [
+        (c1, "APROVAÇÃO", f"{st.session_state.approval:.0f}", "largada popular", ""),
+        (c2, "FISCAL", f"{st.session_state.fiscal:.0f}", "espaço orçamentário", "card-gold"),
+        (c3, "CONGRESSO", f"{st.session_state.congress:.0f}", "base para votar", "card-blue"),
+        (c4, "GABINETE", f"{st.session_state.cabinet:.0f}", "qualidade ministerial", ""),
+        (c5, "ESTABILIDADE", f"{st.session_state.stability:.0f}", "risco de nascer em crise", "card-red" if st.session_state.stability < 40 else "card-blue"),
+    ]
+    for col, title, value, desc, klass in cards:
+        with col:
+            st.markdown(f"<div class='metric-card {klass}'><h4>{title}</h4><h2>{value}</h2><span>{desc}</span></div>", unsafe_allow_html=True)
+
+    if st.session_state.transition_over:
+        score = readiness_score()
+        faixa = "Alta" if score >= 70 else "Média" if score >= 55 else "Frágil"
+        st.markdown(f"<div class='success-strip'>✅ Transição concluída. Prontidão para governar: <strong>{score:.1f}/100</strong> • Faixa: <strong>{faixa}</strong>.</div>", unsafe_allow_html=True)
+        st.markdown("<div class='panel'><strong>Próxima evolução natural:</strong> posse, ministérios em ação, crises do Congresso, teto orçamentário, popularidade presidencial e entregas dos 100 primeiros dias.</div>", unsafe_allow_html=True)
+        if st.session_state.transition_history:
+            st.markdown("### Resumo da transição")
+            for row in st.session_state.transition_history:
+                st.markdown(f"- **Etapa {row['dia']}** — {row['evento']} → *{row['decisao']}*")
+        if st.button("🔁 Nova campanha", use_container_width=True, key="restart_transition"):
+            init_state(True)
+            st.rerun()
+        return
+
+    event = st.session_state.transition_event
+    st.markdown(f"<div class='event-box event-followup'><h3 style='margin-top:0'>{event['title']}</h3><p>{event['desc']}</p></div>", unsafe_allow_html=True)
+    for idx, option in enumerate(event['options'], start=1):
+        st.markdown("<div class='choice-box'>", unsafe_allow_html=True)
+        st.markdown(f"<div class='choice-title'>{idx}. {option['text']}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='small-muted'>{option['summary']}</div>", unsafe_allow_html=True)
+        chips = []
+        for label,key in [("Aprovação","approval"),("Fiscal","fiscal"),("Congresso","congress"),("Gabinete","cabinet"),("Estabilidade","stability")]:
+            if key in option['effects']:
+                val=option['effects'][key]
+                chips.append(chip(f"{label} {'+' if val>=0 else ''}{val}"))
+        st.markdown("".join(chips), unsafe_allow_html=True)
+        if st.button("Tomar decisão", key=f"transition_{st.session_state.transition_day}_{event['id']}_{idx}", use_container_width=True):
+            next_transition_day(option)
+            st.rerun()
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    if st.session_state.transition_history:
+        st.markdown("### Etapas já definidas")
+        for row in reversed(st.session_state.transition_history[-4:]):
+            st.markdown(f"- **Etapa {row['dia']}** — {row['evento']} → *{row['decisao']}*")
 
 
 def main():
@@ -1627,10 +1796,14 @@ def main():
         render_start_screen()
         return
 
+    if st.session_state.post_presidency_mode:
+        render_transition_mode()
+        return
+
     st.markdown(
         f"""
         <div class="hero">
-            <h1>🇧🇷 Corrida ao Planalto</h1>
+            <h1>🇧🇷 Corrida ao Planalto • V6</h1>
             <p>Dia {st.session_state.day} de {st.session_state.total_days} • {PARTIES[st.session_state.party]['nome']} • {ADVISORS[st.session_state.advisor]['nome']}</p>
         </div>
         """,
