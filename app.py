@@ -1,6 +1,5 @@
-import math
 import random
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
 import plotly.graph_objects as go
@@ -10,13 +9,11 @@ import streamlit as st
 # CONFIG
 # =========================================================
 st.set_page_config(
-    page_title="🇧🇷 Candidato 2026: Viral Edition",
+    page_title="🇧🇷 Candidato 2026: Viral Edition V4",
     page_icon="🗳️",
     layout="wide",
     initial_sidebar_state="expanded",
 )
-
-random.seed()
 
 # =========================================================
 # STYLE
@@ -27,26 +24,29 @@ STYLE = """
     html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     .main { background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%); }
     .hero {
-        background: linear-gradient(135deg, #0f172a 0%, #1e293b 40%, #1d4ed8 100%);
-        border-radius: 24px;
+        background: linear-gradient(135deg, #0f172a 0%, #172554 45%, #1d4ed8 100%);
+        border-radius: 26px;
         padding: 28px;
         color: white;
         box-shadow: 0 18px 50px rgba(15,23,42,.22);
-        margin-bottom: 18px;
+        margin-bottom: 16px;
     }
-    .hero h1 { margin: 0 0 6px 0; font-size: 2.1rem; }
-    .hero p { margin: 0; opacity: .92; }
-    .card {
+    .hero h1 { margin:0 0 6px 0; font-size: 2.1rem; }
+    .hero p { margin:0; opacity:.9; }
+    .panel {
         background: white;
         border-radius: 18px;
         padding: 18px;
-        box-shadow: 0 8px 26px rgba(15,23,42,.08);
+        box-shadow: 0 8px 24px rgba(15,23,42,.08);
         border: 1px solid rgba(99,102,241,.08);
     }
     .metric-card {
         background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
-        color: white; padding: 16px; border-radius: 18px;
-        min-height: 108px; box-shadow: 0 10px 28px rgba(0,0,0,.18);
+        color: white;
+        border-radius: 18px;
+        padding: 16px;
+        min-height: 108px;
+        box-shadow: 0 10px 28px rgba(0,0,0,.18);
     }
     .metric-card h4 { margin:0; opacity:.78; font-size:12px; text-transform: uppercase; letter-spacing: .08em; }
     .metric-card h2 { margin:10px 0 6px 0; font-size: 30px; }
@@ -54,11 +54,14 @@ STYLE = """
     .event-box {
         background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
         border-left: 8px solid #2563eb;
-        border-radius: 22px; padding: 24px; box-shadow: 0 12px 34px rgba(15,23,42,.10);
+        border-radius: 22px;
+        padding: 24px;
+        box-shadow: 0 12px 34px rgba(15,23,42,.10);
         margin-bottom: 18px;
     }
     .event-crisis { border-left-color: #dc2626; }
     .event-good { border-left-color: #16a34a; }
+    .event-followup { border-left-color: #7c3aed; }
     .tag {
         display:inline-block; padding:6px 10px; border-radius:999px; font-size:11px;
         font-weight:700; margin-right:6px; margin-top:8px;
@@ -66,6 +69,7 @@ STYLE = """
     .tag-blue { background:#dbeafe; color:#1d4ed8; }
     .tag-red { background:#fee2e2; color:#b91c1c; }
     .tag-green { background:#dcfce7; color:#166534; }
+    .tag-purple { background:#ede9fe; color:#6d28d9; }
     .choice-box {
         background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 14px;
         box-shadow: 0 6px 18px rgba(15,23,42,.05); margin-bottom: 10px;
@@ -80,14 +84,23 @@ STYLE = """
         background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
         color: white; padding: 14px 16px; border-radius: 14px; font-weight: 600;
     }
-    .advisor {
-        background: white; border-radius: 16px; padding: 14px;
-        border: 1px solid #e5e7eb; box-shadow: 0 6px 18px rgba(15,23,42,.05);
+    .effect-chip {
+        display:inline-flex; align-items:center; gap:6px; padding:7px 10px; border-radius:999px;
+        font-size:12px; font-weight:700; margin:4px 5px 0 0; background:#f3f4f6; color:#111827;
+    }
+    .consequence-card {
+        background: linear-gradient(135deg, #fff7ed 0%, #fffbeb 100%);
+        border: 1px solid #fed7aa; border-radius: 16px; padding: 14px; margin-bottom: 10px;
     }
     .achievement {
         display:inline-block; padding:8px 12px; border-radius:999px; margin:4px;
         background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%); color:white;
         font-size:12px; font-weight:700;
+    }
+    .region-row { margin-bottom: 10px; }
+    .gov-box {
+        background: linear-gradient(135deg, #ecfeff 0%, #eff6ff 100%);
+        border-radius: 18px; padding: 16px; border: 1px solid #bfdbfe;
     }
 </style>
 """
@@ -105,13 +118,13 @@ REGIOES = {
 }
 
 SEGMENTOS = {
-    "periferia": {"peso": 18, "chave": "social"},
-    "classe_media": {"peso": 18, "chave": "gestao"},
-    "agro": {"peso": 12, "chave": "agro"},
-    "evangelicos": {"peso": 14, "chave": "valores"},
-    "jovens": {"peso": 12, "chave": "digital"},
-    "servidores": {"peso": 11, "chave": "gestao"},
-    "empreendedores": {"peso": 15, "chave": "mercado"},
+    "periferia": {"peso": 18, "chave": "social", "nome": "Periferia"},
+    "classe_media": {"peso": 18, "chave": "gestao", "nome": "Classe média"},
+    "agro": {"peso": 12, "chave": "agro", "nome": "Agro"},
+    "evangelicos": {"peso": 14, "chave": "valores", "nome": "Evangélicos"},
+    "jovens": {"peso": 12, "chave": "digital", "nome": "Jovens"},
+    "servidores": {"peso": 11, "chave": "gestao", "nome": "Servidores"},
+    "empreendedores": {"peso": 15, "chave": "mercado", "nome": "Empreendedores"},
 }
 
 ADVERSARIOS = {
@@ -122,39 +135,24 @@ ADVERSARIOS = {
 
 ASSESSORES = {
     "estrategista": {
-        "nome": "Carlos Mendes",
-        "icone": "🎯",
-        "especialidade": "pesquisa",
-        "bonus": {"narrativa": 2, "momentum": 1},
-        "descricao": "Lê pesquisas, detecta swing e melhora decisões de timing.",
+        "nome": "Carlos Mendes", "icone": "🎯", "descricao": "Lê swing, timing e tendência.",
+        "bonus": {"narrativa": 2, "momentum": 1, "credibilidade": 1},
     },
     "financeiro": {
-        "nome": "Ana Rodrigues",
-        "icone": "💰",
-        "especialidade": "arrecadacao",
-        "bonus": {"caixa": 10000, "credibilidade": -1},
-        "descricao": "Turbina caixa e negocia captação legal, mas pode soar fria.",
+        "nome": "Ana Rodrigues", "icone": "💰", "descricao": "Captação legal e controle de caixa.",
+        "bonus": {"caixa": 12000, "credibilidade": -1, "allies": 1},
     },
     "comunicacao": {
-        "nome": "Pedro Santos",
-        "icone": "📰",
-        "especialidade": "midia",
-        "bonus": {"midia": 5, "viral": 8},
-        "descricao": "Transforma bom momento em viral. Em crise, pode amplificar erro.",
+        "nome": "Pedro Santos", "icone": "📰", "descricao": "Amplifica bons momentos e corta danos.",
+        "bonus": {"media": 5, "viral": 8},
     },
     "politico": {
-        "nome": "Helena Costa",
-        "icone": "🤝",
-        "especialidade": "coalizao",
-        "bonus": {"aliados": 8, "tempo_tv": 3},
-        "descricao": "Abre portas em Brasília e protege sua governabilidade.",
+        "nome": "Helena Costa", "icone": "🤝", "descricao": "Negocia apoio, palanque e governabilidade.",
+        "bonus": {"allies": 8, "time_tv": 3, "governabilidade": 6},
     },
     "juridico": {
-        "nome": "Roberto Lima",
-        "icone": "⚖️",
-        "especialidade": "compliance",
-        "bonus": {"risco": -8, "credibilidade": 2},
-        "descricao": "Evita cassação, enquadra propaganda e reduz dano em crise.",
+        "nome": "Roberto Lima", "icone": "⚖️", "descricao": "Evita cassação e enquadra propaganda.",
+        "bonus": {"risk": -8, "credibility": 2},
     },
 }
 
@@ -176,7 +174,24 @@ ACHIEVEMENTS = {
     "lider_sudeste": "🏙️ Dominou o Sudeste",
     "sem_escandalo": "✨ Campanha limpa",
     "primeiro_turno": "🏆 Vitória no 1º turno",
+    "sobreviveu_crise": "🛡️ Sobreviveu à crise",
+    "consequencia_mestre": "🧠 Mestre das consequências",
 }
+
+# =========================================================
+# MODELS
+# =========================================================
+@dataclass
+class Consequence:
+    key: str
+    title: str
+    desc: str
+    duration: int
+    daily: Dict[str, float] = field(default_factory=dict)
+    end_effects: Dict[str, float] = field(default_factory=dict)
+    severity: str = "warning"
+    followup_event: Optional[str] = None
+    followup_chance: float = 0.0
 
 
 @dataclass
@@ -184,8 +199,9 @@ class Option:
     text: str
     summary: str
     effects: Dict[str, float]
-    requires: Optional[Dict[str, float]] = None
     risky: bool = False
+    requirement: Optional[Dict[str, float]] = None
+    consequences: List[Consequence] = field(default_factory=list)
 
 
 @dataclass
@@ -198,231 +214,569 @@ class EventCard:
     phase: str
     tags: List[str]
     options: List[Option]
+    followup_only: bool = False
 
 
+# =========================================================
+# CONSEQUENCE FACTORY
+# =========================================================
+def cons_base_midia_negativa() -> Consequence:
+    return Consequence(
+        key="midia_negativa",
+        title="Rodada de mídia negativa",
+        desc="Seu movimento gerou manchetes ruins por alguns dias. O dano não vem de uma vez: ele pinga e corrói confiança.",
+        duration=3,
+        daily={"media": -2.0, "credibility": -1.2, "rejection": 0.5},
+        severity="danger",
+    )
+
+
+def cons_onda_apoio() -> Consequence:
+    return Consequence(
+        key="onda_apoio",
+        title="Onda de apoio orgânico",
+        desc="A campanha entrou numa fase de boa maré. A cada dia, indecisos e apoiadores replicam seu discurso sem muito empurrão.",
+        duration=3,
+        daily={"intent": 0.7, "media": 1.2, "viral": 2.0, "momentum": 0.5},
+        severity="good",
+    )
+
+
+def cons_pressao_tse() -> Consequence:
+    return Consequence(
+        key="pressao_tse",
+        title="Pressão do TSE",
+        desc="Sua campanha entrou no radar jurídico. Isso não mata sozinho, mas faz cada decisão seguinte parecer mais arriscada.",
+        duration=3,
+        daily={"risk": 2.4, "credibility": -0.8},
+        severity="danger",
+        followup_event="tse_julgamento",
+        followup_chance=0.45,
+    )
+
+
+def cons_aliados_desconfiados() -> Consequence:
+    return Consequence(
+        key="aliados_desconfiados",
+        title="Aliados desconfiados",
+        desc="Sua base começa a perguntar se vale mesmo continuar contigo. Isso desgasta tempo de TV, palanque e articulação.",
+        duration=3,
+        daily={"allies": -2.1, "time_tv": -0.7, "governabilidade": -1.2},
+        severity="warning",
+        followup_event="traicao_aliado",
+        followup_chance=0.35,
+    )
+
+
+def cons_base_animada() -> Consequence:
+    return Consequence(
+        key="base_animada",
+        title="Base inflamou",
+        desc="Sua militância comprou a narrativa e empurrou a campanha para frente. O lado ruim é que isso também deixa a campanha mais aguda.",
+        duration=2,
+        daily={"viral": 3.0, "intent": 0.6, "rejection": 0.25},
+        severity="good",
+    )
+
+
+def cons_empresariado_feliz() -> Consequence:
+    return Consequence(
+        key="empresariado_feliz",
+        title="Mercado abriu a carteira",
+        desc="Seu discurso agradou setores produtivos. O caixa respira, mas o povão vai cobrar contrapartida social.",
+        duration=3,
+        daily={"cash": 7000.0, "credibility": 0.4, "intent": -0.15},
+        severity="good",
+    )
+
+
+def cons_memes_crise() -> Consequence:
+    return Consequence(
+        key="memes_crise",
+        title="Virou meme ruim",
+        desc="Seu erro virou trend. O problema não é só a piada: é a repetição desgastando imagem por vários dias.",
+        duration=3,
+        daily={"viral": 2.0, "credibility": -1.5, "rejection": 0.9, "media": -1.0},
+        severity="danger",
+        followup_event="podcast_gafe_followup",
+        followup_chance=0.4,
+    )
+
+
+# =========================================================
+# EVENTS
+# =========================================================
 EVENTS: List[EventCard] = [
     EventCard(
-        id="debate_nacional",
-        title="📺 Debate nacional em horário nobre",
-        desc="Você enfrenta os três principais adversários ao vivo. Um corte certo pode te empurrar para o topo. Um tropeço vira meme por uma semana.",
-        category="mídia",
-        tone="neutral",
-        phase="all",
-        tags=["alto impacto", "tv", "viral"],
-        options=[
-            Option("Bater duro em corrupção e desperdício", "Mobiliza indignação e cresce entre classe média, mas aumenta rejeição.", {"intencao": 2.5, "rejeicao": 2.0, "midia": 6, "energia": -12, "credibilidade": 1, "narrativa": 2}),
-            Option("Apresentar plano concreto e linguagem simples", "Menos espetáculo, mais consistência.", {"intencao": 1.8, "rejeicao": -0.8, "midia": 4, "energia": -10, "credibilidade": 4, "gestao": 5}),
-            Option("Entrar no tom provocador da internet", "Pode explodir nas redes, mas também gerar fadiga e rejeição.", {"intencao": 2.0, "rejeicao": 3.0, "midia": 8, "energia": -9, "viral": 15, "digital": 4}, risky=True),
-        ],
-    ),
-    EventCard(
-        id="pesquisa_queda",
-        title="📉 Nova pesquisa te coloca fora do 2º turno",
-        desc="Institutos apontam estagnação e sua militância entra em modo pânico. O mercado e os influenciadores políticos começam a te abandonar.",
+        id="pesquisa_subiu",
+        title="📊 Pesquisa nova te coloca em alta",
+        desc="Você cresceu 3 pontos entre indecisos. A campanha agora precisa escolher se transforma isso em euforia, serenidade ou máquina de arrecadação.",
         category="pesquisa",
-        tone="crisis",
-        phase="early_mid",
-        tags=["crise", "pesquisa", "pressão"],
-        options=[
-            Option("Trocar a narrativa e focar no custo de vida", "Reposiciona a campanha com pauta de bolso.", {"intencao": 2.8, "social": 7, "midia": 2, "caixa": -8000, "energia": -6}),
-            Option("Dobrar a aposta no discurso técnico", "Ganha respeito, mas nem sempre gera voto.", {"credibilidade": 4, "gestao": 6, "midia": 1, "intencao": 0.6, "energia": -5}),
-            Option("Atacar o instituto e gritar manipulação", "Engaja sua base, mas aumenta rejeição em moderados.", {"viral": 10, "intencao": 1.0, "rejeicao": 2.5, "credibilidade": -3, "midia": 5}, risky=True),
-        ],
-    ),
-    EventCard(
-        id="audio_vazado",
-        title="📱 Áudio vazado no WhatsApp",
-        desc="Um trecho de reunião interna sai do contexto e vira munição em grupos bolsonados, lulistas, isentões e páginas de fofoca política ao mesmo tempo.",
-        category="crise",
-        tone="crisis",
+        tone="good",
         phase="all",
-        tags=["whatsapp", "vazamento", "narrativa"],
+        tags=["pesquisa", "momento", "viral"],
         options=[
-            Option("Liberar o áudio completo e assumir o desgaste", "Transparência segura a credibilidade.", {"credibilidade": 5, "rejeicao": -1.0, "midia": 4, "energia": -6, "intencao": 0.8}),
-            Option("Partir para o ataque jurídico e pedir derrubada", "Reduz risco futuro, mas não encerra a repercussão no mesmo dia.", {"risco": -8, "caixa": -12000, "midia": 2, "intencao": 0.4, "energia": -4}),
-            Option("Fingir que nada aconteceu e subir hashtag positiva", "Pode funcionar por sorte, mas o risco é feio.", {"viral": 6, "midia": -3, "rejeicao": 2.0, "credibilidade": -4, "intencao": -0.8}, risky=True),
+            Option(
+                "Comemorar com humildade e foco em ampliar ponte com indecisos",
+                "Você capitalizou sem parecer deslumbrado.",
+                {"intent": 1.6, "credibility": 2.0, "media": 3.0, "momentum": 1.5},
+                consequences=[cons_onda_apoio()],
+            ),
+            Option(
+                "Lançar ofensiva de arrecadação dizendo que agora a vitória é possível",
+                "O caixa respondeu, mas uma parte do eleitorado torceu o nariz.",
+                {"cash": 26000.0, "intent": 0.8, "media": 2.0, "viral": 4.0, "rejection": 0.6},
+            ),
+            Option(
+                "Zombar dos adversários e tratar a virada como inevitável",
+                "A base gostou; o centro, nem tanto.",
+                {"viral": 7.0, "intent": 0.7, "rejection": 1.8, "credibility": -1.5},
+                risky=True,
+                consequences=[cons_base_animada(), cons_memes_crise()],
+            ),
         ],
     ),
     EventCard(
-        id="alianca_centrao",
-        title="🤝 O centrão quer entrar na campanha",
-        desc="Eles oferecem tempo de TV, prefeitos, prefeitas e capilaridade no interior. Em troca, cobram espaço e compromissos que podem irritar sua base.",
-        category="política",
+        id="debate_nacional",
+        title="📺 Debate presidencial em rede nacional",
+        desc="É o tipo de noite que cria candidato ou derrete favorito. O país está assistindo cada cara, pausa e resposta atravessada.",
+        category="midia",
         tone="neutral",
-        phase="mid",
-        tags=["coalizão", "tempo de TV", "interior"],
+        phase="all",
+        tags=["debate", "TV", "reta crítica"],
         options=[
-            Option("Fechar acordo e ampliar a estrutura", "Muito forte para capilaridade, com custo de coerência.", {"aliados": 12, "tempo_tv": 6, "intencao": 1.8, "credibilidade": -2, "rejeicao": 1.0, "caixa": 12000}),
-            Option("Aceitar apoio sem loteamento pesado", "Negócio difícil, mas equilibrado.", {"aliados": 7, "tempo_tv": 4, "intencao": 1.2, "credibilidade": 1, "caixa": 5000}),
-            Option("Recusar para preservar a narrativa", "Mantém pureza, mas perde máquina eleitoral.", {"credibilidade": 3, "narrativa": 3, "aliados": -8, "tempo_tv": -4, "intencao": -1.0}, risky=True),
+            Option(
+                "Responder com firmeza, dados e um tom presidencial",
+                "Você passou autoridade e ganhou respeito entre indecisos.",
+                {"intent": 2.1, "credibility": 3.5, "media": 5.0, "energy": -8.0, "rejection": -0.5},
+                requirement={"energy": 18},
+                consequences=[cons_onda_apoio()],
+            ),
+            Option(
+                "Partir para o ataque e buscar o corte mais viral da noite",
+                "Funcionou com sua base, mas elevou rejeição.",
+                {"viral": 10.0, "intent": 1.6, "media": 4.0, "rejection": 2.2, "energy": -6.0},
+                risky=True,
+                consequences=[cons_base_animada()],
+            ),
+            Option(
+                "Fazer um debate morno, sem errar e sem brilhar",
+                "Você saiu inteiro, mas deixou espaço para rivais crescerem.",
+                {"credibility": 1.0, "media": 1.0, "energy": -4.0, "momentum": -0.5},
+            ),
         ],
     ),
     EventCard(
-        id="greve_combustivel",
-        title="⛽ Alta dos combustíveis domina o noticiário",
-        desc="Motoristas, autônomos e famílias pressionam. Todo candidato está sendo cobrado por uma saída simples para um problema complicado.",
+        id="podcast_gafe",
+        title="🎙️ Podcast gigante te chama ao vivo",
+        desc="Milhões assistindo. A entrevista pode humanizar a campanha ou produzir um corte desastroso que não morre nunca mais.",
+        category="digital",
+        tone="neutral",
+        phase="all",
+        tags=["podcast", "internet", "clipe"],
+        options=[
+            Option(
+                "Ir preparado e misturar leveza com proposta concreta",
+                "Boa presença, bom corte, bom ganho.",
+                {"viral": 8.0, "media": 3.0, "intent": 1.4, "credibility": 2.0, "energy": -5.0},
+                consequences=[cons_onda_apoio()],
+            ),
+            Option(
+                "Tentar lacrar em tudo para dominar as redes",
+                "Você ganhou clipes, mas também abriu flanco para meme ruim.",
+                {"viral": 12.0, "intent": 0.7, "rejection": 1.2, "credibility": -0.8},
+                risky=True,
+                consequences=[cons_memes_crise()],
+            ),
+            Option(
+                "Recusar e dizer que campanha séria não é entretenimento",
+                "Soou elitista e defensivo.",
+                {"media": -4.0, "viral": -3.0, "intent": -1.0, "credibility": -0.8},
+            ),
+        ],
+    ),
+    EventCard(
+        id="mercado_assustou",
+        title="💹 Mercado reage mal a uma fala sua",
+        desc="Dólar sobe, comentarista econômico bate, e a imprensa te cobra previsibilidade. Isso contamina o noticiário por dias se você errar de novo.",
         category="economia",
         tone="crisis",
         phase="all",
-        tags=["economia", "bolso", "urgência"],
+        tags=["economia", "mercado", "credibilidade"],
         options=[
-            Option("Anunciar pacote emergencial com foco em transporte e gás", "Popular, mas consome caixa político e financeiro.", {"intencao": 2.4, "social": 6, "caixa": -18000, "credibilidade": 1, "midia": 4}),
-            Option("Defender reforma estrutural e previsibilidade fiscal", "Boa para mercado, menos sedutora para o povão.", {"mercado": 7, "credibilidade": 4, "intencao": 0.7, "midia": 2}),
-            Option("Culpar adversários e fazer live indignada", "Funciona na base, mas pesa na rejeição.", {"viral": 12, "intencao": 1.0, "rejeicao": 1.8, "credibilidade": -2}, risky=True),
+            Option(
+                "Recalibrar discurso com equipe técnica e metas claras",
+                "Você acalmou parte do pânico e ganhou solidez.",
+                {"credibility": 3.5, "intent": 0.9, "media": 2.0, "cash": 6000.0},
+                consequences=[cons_empresariado_feliz()],
+            ),
+            Option(
+                "Dobrar a aposta e bater no mercado financeiro",
+                "Parte do eleitorado popular gostou, mas a desconfiança cresceu.",
+                {"intent": 1.3, "viral": 4.0, "rejection": 1.1, "cash": -9000.0, "credibility": -1.8},
+                risky=True,
+                consequences=[cons_midia_negativa := cons_base_midia_negativa()],
+            ),
+            Option(
+                "Fingir que nada aconteceu",
+                "A narrativa ficou solta e a mídia ocupou o vácuo.",
+                {"media": -5.0, "credibility": -2.2, "intent": -0.8},
+                consequences=[cons_base_midia_negativa()],
+            ),
         ],
     ),
     EventCard(
-        id="enchente_sudeste",
-        title="🌧️ Enchentes em capitais do Sudeste",
-        desc="A tragédia humanitária exige presença, empatia e proposta concreta. Não dá para parecer turista de crise.",
+        id="apoio_governador",
+        title="🏛️ Um governador importante quer subir no seu palanque",
+        desc="O apoio traz tempo, estrutura e interiorização, mas também vem com cobrança por cargos e espaço futuro.",
+        category="politica",
+        tone="good",
+        phase="mid_late",
+        tags=["aliança", "governador", "palanque"],
+        options=[
+            Option(
+                "Aceitar e compartilhar protagonismo com equilíbrio",
+                "Boa operação: você ganhou capilaridade sem parecer refém.",
+                {"allies": 7.0, "time_tv": 3.0, "intent": 1.4, "governabilidade": 5.0, "Sudeste": 2.0},
+            ),
+            Option(
+                "Aceitar, mas entregar demais para fechar o apoio rápido",
+                "Curto prazo forte, longo prazo caro.",
+                {"allies": 10.0, "intent": 1.8, "time_tv": 4.0, "governabilidade": -3.0},
+                risky=True,
+                consequences=[cons_aliados_desconfiados()],
+            ),
+            Option(
+                "Recusar para manter imagem de independência",
+                "Você preservou pureza, mas perdeu estrutura.",
+                {"credibility": 1.5, "allies": -5.0, "time_tv": -2.0, "intent": -0.6},
+            ),
+        ],
+    ),
+    EventCard(
+        id="enchente_nacional",
+        title="🌧️ Enchentes ganham o noticiário nacional",
+        desc="O país espera postura de presidenciável. Explorar demais pega mal; sumir também pega mal. É o clássico campo minado brasileiro.",
         category="social",
         tone="crisis",
         phase="all",
-        tags=["tragédia", "Sudeste", "empatia"],
+        tags=["tragédia", "empatia", "liderança"],
         options=[
-            Option("Ir ao local com equipe técnica e anunciar reconstrução", "Ação forte se a comunicação não exagerar.", {"sudeste": 5, "intencao": 1.6, "credibilidade": 4, "caixa": -15000, "energia": -9}),
-            Option("Priorizar fala institucional e coordenação federativa", "Menos emocional, mais responsável.", {"gestao": 6, "credibilidade": 3, "intencao": 1.0, "midia": 2}),
-            Option("Transformar a tragédia em palanque contra rival", "Pode viralizar, mas pega muito mal.", {"viral": 8, "midia": 3, "rejeicao": 3.0, "credibilidade": -5, "intencao": -1.2}, risky=True),
+            Option(
+                "Ir ao local, propor fundo emergencial e evitar politicagem",
+                "Movimento forte, humano e difícil de atacar.",
+                {"intent": 2.0, "credibility": 3.0, "media": 4.0, "energy": -9.0, "risk": -1.0},
+                consequences=[cons_onda_apoio()],
+            ),
+            Option(
+                "Comentar pelas redes e culpar adversários rapidamente",
+                "Corte rápido, desgaste duradouro.",
+                {"viral": 5.0, "intent": 0.4, "rejection": 1.6, "credibility": -2.2},
+                risky=True,
+                consequences=[cons_base_midia_negativa()],
+            ),
+            Option(
+                "Esperar a poeira baixar para não parecer oportunista",
+                "A intenção era correta, mas pareceu ausência.",
+                {"media": -4.0, "intent": -1.1, "credibility": -1.4},
+            ),
         ],
     ),
     EventCard(
-        id="apoio_governador_ne",
-        title="🌵 Governador popular do Nordeste quer te apoiar",
-        desc="O apoio pode te dar palanque e estrutura em cidades-chave, mas cobra prioridade para programas sociais e obras.",
-        category="aliança",
-        tone="good",
-        phase="mid",
-        tags=["Nordeste", "aliança", "estrutura"],
-        options=[
-            Option("Fechar apoio e assumir pauta social com força", "Excelente para Nordeste e periferia.", {"nordeste": 8, "social": 6, "aliados": 5, "intencao": 2.0, "caixa": -6000}),
-            Option("Aceitar apoio, mas manter discurso mais amplo", "Equilíbrio nacional.", {"nordeste": 5, "intencao": 1.2, "credibilidade": 2, "aliados": 4}),
-            Option("Evitar foto para não parecer regionalizado", "Estratégia fria demais para uma chance boa.", {"nordeste": -4, "credibilidade": 0, "intencao": -0.8}, risky=True),
-        ],
-    ),
-    EventCard(
-        id="pauta_agro",
-        title="🌾 Lideranças do agro exigem posição clara",
-        desc="Produtores cobram segurança jurídica, infraestrutura e resposta sobre embargo ambiental. Um aceno certo move o Centro-Oeste e parte do Sul.",
-        category="agro",
-        tone="neutral",
-        phase="all",
-        tags=["agro", "Centro-Oeste", "Sul"],
-        options=[
-            Option("Falar em produção com previsibilidade e licença rápida", "Agrada mercado e agro, mas gera ruído ambiental.", {"agro": 7, "mercado": 4, "centro-oeste": 5, "sul": 3, "rejeicao": 0.7}),
-            Option("Defender produção com rastreabilidade e crédito verde", "Equilibrado e moderno.", {"agro": 4, "ambiental": 5, "credibilidade": 3, "intencao": 1.0}),
-            Option("Atacar o setor para agradar nicho urbano", "Pode render aplauso online, mas custa caro no interior.", {"digital": 3, "agro": -8, "centro-oeste": -6, "sul": -4, "rejeicao": 1.5}, risky=True),
-        ],
-    ),
-    EventCard(
-        id="tiktok_jovem",
-        title="🎵 Vídeo curto explode no TikTok",
-        desc="Sua equipe descobriu um formato que humaniza sua imagem. Agora é decidir se vira onda ou vergonha alheia nacional.",
-        category="digital",
-        tone="good",
-        phase="early_mid",
-        tags=["TikTok", "jovens", "viral"],
-        options=[
-            Option("Entrar na trend com humor medido", "Boa chance de crescer com jovens sem parecer caricato.", {"digital": 8, "jovens": 6, "viral": 18, "intencao": 1.5, "credibilidade": 1}),
-            Option("Usar o formato para explicar proposta em 30 segundos", "Menos meme, mais valor.", {"digital": 5, "gestao": 3, "credibilidade": 3, "intencao": 1.2}),
-            Option("Forçar meme sem timing", "Clássico erro de político tentando ser cool.", {"viral": 10, "credibilidade": -5, "rejeicao": 2.2, "intencao": -0.6}, risky=True),
-        ],
-    ),
-    EventCard(
-        id="operacao_pf_aliado",
-        title="🚨 Operação atinge aliado importante",
-        desc="A Polícia Federal faz buscas em nomes ligados ao seu arco de apoio. A imprensa quer uma resposta em minutos, não em horas.",
-        category="crise",
+        id="greve_caminhoneiros",
+        title="🚚 Paralisação ameaça abastecimento",
+        desc="Combustível e comida entram na pauta. O eleitor médio não quer tese: quer alguém que passe sensação de controle.",
+        category="economia",
         tone="crisis",
         phase="all",
-        tags=["PF", "escândalo", "risco jurídico"],
+        tags=["abastecimento", "greve", "economia"],
         options=[
-            Option("Romper imediatamente e defender apuração total", "Dói na coalizão, mas blinda sua imagem.", {"credibilidade": 6, "risco": -10, "aliados": -8, "intencao": 1.3, "rejeicao": -1.0}),
-            Option("Pedir cautela e aguardar investigação", "Mais político, menos contundente.", {"aliados": 2, "credibilidade": -1, "risco": 4, "intencao": -0.2}),
-            Option("Defender o aliado e atacar a operação", "Muito perigoso.", {"aliados": 5, "credibilidade": -6, "risco": 14, "rejeicao": 3.5, "intencao": -1.8}, risky=True),
+            Option(
+                "Defender negociação imediata e plano temporário de abastecimento",
+                "Você pareceu adulto na sala.",
+                {"intent": 1.7, "credibility": 2.6, "media": 2.5, "risk": -1.0},
+            ),
+            Option(
+                "Comprar briga e chamar tudo de sabotagem política",
+                "Rende clipe, mas o caos pode colar em você.",
+                {"viral": 6.0, "intent": 0.5, "rejection": 1.7, "credibility": -1.7},
+                risky=True,
+                consequences=[cons_base_midia_negativa(), cons_aliados_desconfiados()],
+            ),
+            Option(
+                "Falar só para agradar um lado da categoria",
+                "Você ganhou nicho e perdeu o resto.",
+                {"agro": 3.0, "intent": 0.3, "credibility": -0.9, "rejection": 0.8},
+            ),
         ],
     ),
     EventCard(
-        id="sabatina_jn",
-        title="🎙️ Sabatina dura em TV nacional",
-        desc="Perguntas secas, interrupções e pressão sobre números. Não basta carisma; precisa parecer presidenciável por inteiro.",
-        category="mídia",
-        tone="neutral",
-        phase="late",
-        tags=["entrevista", "credibilidade", "reta final"],
-        options=[
-            Option("Responder com precisão e reconhecer limites", "Passa seriedade e maturidade.", {"credibilidade": 5, "midia": 5, "intencao": 1.3, "rejeicao": -0.6}),
-            Option("Buscar confronto com os jornalistas", "Pode incendiar a base, mas afastar indecisos.", {"viral": 12, "midia": 6, "rejeicao": 2.5, "intencao": 0.4}, risky=True),
-            Option("Ser simpático e evitar tensão", "Seguro, porém pode parecer leve demais.", {"midia": 3, "intencao": 0.7, "credibilidade": 1}),
-        ],
-    ),
-    EventCard(
-        id="direito_resposta",
-        title="⚖️ TSE concede direito de resposta",
-        desc="Você venceu uma disputa sobre propaganda enganosa. O momento é bom, mas exagerar no tom pode virar arrogância.",
-        category="jurídico",
-        tone="good",
-        phase="late",
-        tags=["TSE", "justiça eleitoral", "oportunidade"],
-        options=[
-            Option("Usar o espaço para desmontar fake news com calma", "Excelente para confiança.", {"credibilidade": 5, "risco": -6, "midia": 3, "intencao": 1.1}),
-            Option("Transformar a vitória em peça agressiva", "Pode render corte, mas eleva fadiga.", {"viral": 7, "intencao": 0.8, "rejeicao": 1.2}),
-            Option("Fazer fala institucional curta e elegante", "Menos impacto, mais classe.", {"credibilidade": 3, "rejeicao": -0.4, "intencao": 0.6}),
-        ],
-    ),
-    EventCard(
-        id="apagao_regional",
-        title="💡 Apagão atinge cidades estratégicas",
-        desc="A crise mexe com comércio, segurança e humor do eleitor. Sua resposta precisa parecer de presidente, não de comentarista de rede social.",
-        category="infraestrutura",
-        tone="crisis",
-        phase="all",
-        tags=["crise", "segurança", "serviços"],
-        options=[
-            Option("Cobrar plano emergencial e reconstrução da rede", "Postura firme e prática.", {"gestao": 6, "intencao": 1.3, "credibilidade": 2, "energia": -5}),
-            Option("Visitar o local e ouvir comerciantes", "Bom para empatia local.", {"sudeste": 3, "sul": 2, "intencao": 1.0, "midia": 2, "energia": -8}),
-            Option("Usar o tema só para lacrar contra rivais", "Barato que pode sair caro.", {"viral": 6, "rejeicao": 2.0, "credibilidade": -3, "intencao": -0.4}, risky=True),
-        ],
-    ),
-    EventCard(
-        id="apoio_evangelico",
-        title="⛪ Liderança evangélica sinaliza apoio condicional",
-        desc="A aproximação pode mexer fortemente em intenção de voto, mas qualquer ruído de incoerência será cobrado em dobro.",
+        id="igreja_apoio",
+        title="⛪ Liderança evangélica sinaliza apoio",
+        desc="A oportunidade é potente, mas qualquer gesto artificial cheira a voto por conveniência. E o Brasil percebe rápido.",
         category="valores",
         tone="good",
         phase="mid_late",
-        tags=["evangélicos", "valores", "mobilização"],
+        tags=["evangélicos", "valores", "aliança"],
         options=[
-            Option("Aceitar apoio com foco em família e combate às drogas", "Ganhos claros no segmento.", {"valores": 7, "evangelicos": 6, "intencao": 1.5, "rejeicao": 0.5}),
-            Option("Receber apoio com discurso de união e liberdade religiosa", "Mais amplo e menos sectário.", {"evangelicos": 4, "credibilidade": 3, "intencao": 1.0}),
-            Option("Fazer aceno exagerado só por voto", "Cheiro de oportunismo.", {"evangelicos": 2, "credibilidade": -4, "rejeicao": 1.8, "intencao": -0.3}, risky=True),
+            Option(
+                "Receber o apoio com discurso de liberdade religiosa e responsabilidade social",
+                "Funcionou sem caricatura.",
+                {"evangelicos": 5.0, "intent": 1.4, "credibility": 2.0, "rejection": 0.3},
+            ),
+            Option(
+                "Radicalizar o discurso para sugar toda a base de uma vez",
+                "Ganhou nicho, perdeu parte do centro.",
+                {"evangelicos": 7.0, "intent": 1.6, "rejection": 1.8, "credibility": -1.3},
+                risky=True,
+                consequences=[cons_base_animada()],
+            ),
+            Option(
+                "Recusar para manter perfil laico sem ruído",
+                "Coerente, mas custa voto e palanque.",
+                {"credibility": 1.4, "evangelicos": -4.0, "intent": -0.8},
+            ),
         ],
     ),
     EventCard(
         id="vaquinha_recorde",
-        title="💸 Sua vaquinha online começa a decolar",
-        desc="Pequenos doadores estão engajados. Dá para transformar isso em narrativa de independência — ou parecer só mais uma máquina de arrecadação.",
-        category="finanças",
+        title="💸 Sua vaquinha online explode",
+        desc="Quando a internet decide doar, a campanha ganha combustível — e também mais olhos fiscalizando tudo que você faz com cada centavo.",
+        category="financas",
         tone="good",
         phase="all",
-        tags=["doações", "digital", "independência"],
+        tags=["doações", "digital", "caixa"],
         options=[
-            Option("Transformar cada doação em prova de campanha popular", "Ótimo para base e caixa.", {"caixa": 24000, "intencao": 1.2, "credibilidade": 2, "viral": 8}),
-            Option("Arrecadar com discrição e prestar contas bem", "Menos brilho, mais solidez.", {"caixa": 18000, "credibilidade": 4, "risco": -3}),
-            Option("Forçar urgência emocional o tempo todo", "Arrecada, mas pode cansar.", {"caixa": 28000, "rejeicao": 1.0, "credibilidade": -2, "intencao": 0.4}, risky=True),
+            Option(
+                "Transformar a vaquinha em símbolo de independência popular",
+                "A narrativa pegou bem.",
+                {"cash": 26000.0, "intent": 1.5, "credibility": 2.2, "viral": 6.0},
+                consequences=[cons_onda_apoio()],
+            ),
+            Option(
+                "Arrecadar forte, mas sem falar muito sobre isso",
+                "Menos brilho, mais disciplina.",
+                {"cash": 21000.0, "credibility": 1.8},
+            ),
+            Option(
+                "Forçar urgência emocional o tempo inteiro",
+                "Arrecada mais hoje, desgasta amanhã.",
+                {"cash": 32000.0, "intent": 0.4, "rejection": 1.1, "credibility": -1.5},
+                risky=True,
+                consequences=[cons_base_midia_negativa()],
+            ),
+        ],
+    ),
+    EventCard(
+        id="operacao_pf_aliado",
+        title="🚨 Operação atinge aliado do seu palanque",
+        desc="Você não é o alvo, mas a notícia te atravessa como bala perdida. No Brasil político, bala perdida quase sempre acha alguém.",
+        category="crise",
+        tone="crisis",
+        phase="mid_late",
+        tags=["PF", "corrupção", "aliança"],
+        options=[
+            Option(
+                "Romper publicamente e defender investigação total",
+                "Doeu na articulação, mas blindou sua imagem.",
+                {"credibility": 4.0, "rejection": -0.8, "allies": -6.0, "governabilidade": -2.0, "media": 2.0},
+            ),
+            Option(
+                "Esperar mais informações antes de falar",
+                "Pareceu prudência para uns e omissão para outros.",
+                {"allies": 2.0, "intent": -0.6, "credibility": -1.0, "media": -2.0},
+                consequences=[cons_base_midia_negativa()],
+            ),
+            Option(
+                "Defender o aliado como vítima política",
+                "Você amarrou o seu nome ao problema dele.",
+                {"allies": 5.0, "intent": -1.4, "rejection": 2.4, "credibility": -3.5, "risk": 6.0},
+                risky=True,
+                consequences=[cons_pressao_tse(), cons_aliados_desconfiados()],
+            ),
+        ],
+    ),
+    EventCard(
+        id="plano_social",
+        title="🧺 Você vai anunciar uma proposta social forte",
+        desc="A proposta pode te aproximar de quem precisa e assustar quem acha que tudo vai virar descontrole fiscal. É sempre esse cabo de guerra.",
+        category="programa",
+        tone="neutral",
+        phase="all",
+        tags=["social", "proposta", "economia"],
+        options=[
+            Option(
+                "Apresentar programa com foco em renda, porta de saída e responsabilidade fiscal",
+                "Você encaixou coração e planilha.",
+                {"intent": 1.8, "periferia": 4.0, "credibility": 2.5, "media": 2.0},
+            ),
+            Option(
+                "Prometer expansão agressiva sem explicar de onde vem o dinheiro",
+                "Popular no curto prazo, perigoso no médio.",
+                {"intent": 2.2, "periferia": 5.0, "credibility": -2.2, "risk": 2.0},
+                risky=True,
+                consequences=[cons_base_midia_negativa()],
+            ),
+            Option(
+                "Adiar o anúncio até ter mais números",
+                "Seguro demais para o momento.",
+                {"credibility": 1.0, "intent": -0.5, "momentum": -1.0},
+            ),
+        ],
+    ),
+    EventCard(
+        id="seguranca_publica",
+        title="🚔 Caso de violência domina a pauta",
+        desc="Ninguém ganha eleição só com segurança, mas muita gente perde quando parece despreparado nela.",
+        category="seguranca",
+        tone="neutral",
+        phase="all",
+        tags=["segurança", "comoção", "RJ/SP"],
+        options=[
+            Option(
+                "Defender ação integrada, inteligência e pacto federativo",
+                "Postura madura, sem cosplay de xerife.",
+                {"intent": 1.5, "credibility": 2.8, "Sudeste": 2.0, "media": 2.0},
+            ),
+            Option(
+                "Adotar tom bélico para dominar a pauta nas redes",
+                "Você acendeu a base, mas assustou indecisos.",
+                {"viral": 7.0, "intent": 0.8, "rejection": 1.4, "credibility": -0.8},
+                risky=True,
+            ),
+            Option(
+                "Escapar do assunto e falar de educação",
+                "Boa pauta, timing péssimo.",
+                {"media": -4.0, "intent": -1.0, "credibility": -1.2},
+            ),
+        ],
+    ),
+    EventCard(
+        id="sabatina_jn",
+        title="📰 Sabatina dura em jornal nacional",
+        desc="Perguntas técnicas, cobrança de passado e armadilha em cada intervalo. O país não perdoa improviso confiante demais.",
+        category="midia",
+        tone="neutral",
+        phase="late",
+        tags=["televisão", "credibilidade", "reta final"],
+        options=[
+            Option(
+                "Responder com precisão e admitir limites quando necessário",
+                "Seriedade vende muito no fim.",
+                {"credibility": 4.0, "media": 4.0, "intent": 1.2, "rejection": -0.5},
+                consequences=[cons_onda_apoio()],
+            ),
+            Option(
+                "Enfrentar jornalista e tentar dominar a entrevista no grito",
+                "Teve corte, teve desgaste.",
+                {"viral": 8.0, "intent": 0.5, "rejection": 2.0, "credibility": -2.2},
+                risky=True,
+                consequences=[cons_memes_crise()],
+            ),
+            Option(
+                "Ser simpático e evitar atrito o tempo todo",
+                "Passou leve demais num momento que pedia substância.",
+                {"media": 1.5, "credibility": -0.6, "intent": 0.3},
+            ),
         ],
     ),
     EventCard(
         id="ultimo_debate",
         title="🎯 Último debate antes da votação",
-        desc="Aqui não é mais só crescer: é evitar derreter na reta final e seduzir indecisos e voto útil.",
-        category="mídia",
+        desc="A reta final chegou. Agora é voto útil, medo de rejeição, sensação de viabilidade e quem erra na hora errada.",
+        category="midia",
         tone="neutral",
         phase="late",
         tags=["debate final", "indecisos", "voto útil"],
         options=[
-            Option("Falar com serenidade e mirar o centro", "Puxa indecisos e reduz medo.", {"intencao": 2.1, "rejeicao": -1.2, "credibilidade": 3, "midia": 4}),
-            Option("Ir para o tudo ou nada no confronto", "Potencial alto e risco alto.", {"intencao": 2.6, "rejeicao": 2.2, "viral": 10, "midia": 6}, risky=True),
-            Option("Buscar voto útil com argumento de viabilidade", "Muito eficiente se você já estiver competitivo.", {"intencao": 1.8, "narrativa": 2, "credibilidade": 2, "tempo_tv": 1}),
+            Option(
+                "Mirar o centro e falar como favorito responsável",
+                "Boa para voto útil e rejeição.",
+                {"intent": 2.3, "rejection": -1.1, "credibility": 3.0, "media": 4.0},
+            ),
+            Option(
+                "Ir para o confronto total e tentar matar a eleição ali",
+                "Ou vira mito, ou vira lembrança ruim.",
+                {"intent": 2.8, "viral": 11.0, "rejection": 2.2, "media": 5.0},
+                risky=True,
+                consequences=[cons_base_animada(), cons_memes_crise()],
+            ),
+            Option(
+                "Pedir voto útil com argumento de viabilidade e governabilidade",
+                "Menos brilho, mais pragmatismo eleitoral.",
+                {"intent": 2.0, "governabilidade": 3.0, "allies": 2.0, "credibility": 1.5},
+            ),
+        ],
+    ),
+    # FOLLOW-UP EVENTS
+    EventCard(
+        id="tse_julgamento",
+        title="⚖️ TSE pauta representação contra sua campanha",
+        desc="A consequência chegou. O problema anterior agora vira sessão, manchete e oportunidade para adversário posar de paladino.",
+        category="juridico",
+        tone="crisis",
+        phase="all",
+        tags=["TSE", "follow-up", "jurídico"],
+        followup_only=True,
+        options=[
+            Option(
+                "Responder tecnicamente, trocar a peça suspeita e baixar o tom",
+                "Você estancou parte do dano.",
+                {"risk": -7.0, "credibility": 2.5, "media": 1.0, "intent": 0.5},
+            ),
+            Option(
+                "Dobrar a aposta e acusar perseguição eleitoral",
+                "Mobiliza base, mas piora o problema institucional.",
+                {"viral": 7.0, "intent": 0.4, "risk": 5.0, "rejection": 1.5, "credibility": -2.0},
+                risky=True,
+                consequences=[cons_pressao_tse()],
+            ),
+        ],
+    ),
+    EventCard(
+        id="traicao_aliado",
+        title="🗡️ Aliado vaza insatisfação e ameaça deserção",
+        desc="O desgaste acumulado bateu na porta. Brasília fareja fragilidade como tubarão fareja sangue.",
+        category="politica",
+        tone="crisis",
+        phase="all",
+        tags=["follow-up", "aliança", "vazamento"],
+        followup_only=True,
+        options=[
+            Option(
+                "Recompor ponte com concessão limitada e jogo de cintura",
+                "Você conteve a sangria sem se vender por completo.",
+                {"allies": 4.0, "governabilidade": 2.0, "time_tv": 1.0, "cash": -6000.0},
+            ),
+            Option(
+                "Comprar a briga e expor quem está chantagendo",
+                "Pode parecer coragem; pode parecer descontrole.",
+                {"viral": 6.0, "credibility": 0.5, "allies": -6.0, "governabilidade": -4.0, "rejection": 1.0},
+                risky=True,
+            ),
+        ],
+    ),
+    EventCard(
+        id="podcast_gafe_followup",
+        title="😂 Sua fala virou trilha de meme nacional",
+        desc="O que parecia só um corte bobo agora está em vídeo, remix, figurinha e programa de humor. É o Brasil fazendo churrasco da sua imagem.",
+        category="digital",
+        tone="crisis",
+        phase="all",
+        tags=["follow-up", "meme", "viral"],
+        followup_only=True,
+        options=[
+            Option(
+                "Entrar na piada, humanizar e puxar assunto sério logo depois",
+                "Você reduziu a toxicidade do meme.",
+                {"viral": 5.0, "credibility": 1.5, "rejection": -0.4, "intent": 0.6},
+            ),
+            Option(
+                "Fingir que não aconteceu",
+                "A internet ama quando o político finge que o incêndio acabou sozinho.",
+                {"credibility": -1.4, "rejection": 1.2, "intent": -0.5},
+                consequences=[cons_base_midia_negativa()],
+            ),
         ],
     ),
 ]
@@ -439,7 +793,7 @@ def phase_for_day(day: int, total: int) -> str:
     progress = day / total
     if progress < 0.25:
         return "early"
-    if progress < 0.60:
+    if progress < 0.65:
         return "mid"
     return "late"
 
@@ -447,27 +801,41 @@ def phase_for_day(day: int, total: int) -> str:
 def event_matches_phase(event_phase: str, day_phase: str) -> bool:
     mapping = {
         "all": {"early", "mid", "late"},
-        "early_mid": {"early", "mid"},
+        "early": {"early"},
         "mid": {"mid"},
-        "mid_late": {"mid", "late"},
         "late": {"late"},
+        "early_mid": {"early", "mid"},
+        "mid_late": {"mid", "late"},
     }
     return day_phase in mapping.get(event_phase, {day_phase})
 
 
+def fmt_money(v: float) -> str:
+    return f"R$ {v:,.0f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
+
+def metric_delta_chip(label: str, value: float) -> str:
+    sign = "+" if value > 0 else ""
+    return f"<span class='effect-chip'>{label} {sign}{value:.1f}</span>"
+
+
+# =========================================================
+# STATE INIT
+# =========================================================
 def init_state(reset_seed: bool = True):
     if reset_seed:
-        st.session_state.seed = random.randint(10_000, 999_999)
+        st.session_state.seed = random.randint(10000, 999999)
     rnd = random.Random(st.session_state.get("seed", 12345))
 
     st.session_state.day = 1
-    st.session_state.total_days = 30
+    st.session_state.total_days = 35
     st.session_state.party = "centro"
     st.session_state.difficulty = "Normal"
     st.session_state.advisor = "estrategista"
     st.session_state.started = False
     st.session_state.game_over = False
     st.session_state.victory = False
+    st.session_state.first_turn = False
     st.session_state.result_text = ""
     st.session_state.last_feedback = ""
     st.session_state.event = None
@@ -478,13 +846,15 @@ def init_state(reset_seed: bool = True):
     st.session_state.combo = 0
     st.session_state.max_combo = 0
     st.session_state.recovery_flag = False
-    st.session_state.first_turn = False
+    st.session_state.followup_queue = []
+    st.session_state.active_consequences = []
+    st.session_state.consequence_turns_survived = 0
 
     st.session_state.intent = 21.5
     st.session_state.rejection = 24.0
     st.session_state.credibility = 48.0
-    st.session_state.cash = 120_000.0
-    st.session_state.energy = 78.0
+    st.session_state.cash = 130000.0
+    st.session_state.energy = 80.0
     st.session_state.media = 44.0
     st.session_state.risk = 14.0
     st.session_state.allies = 52.0
@@ -492,6 +862,7 @@ def init_state(reset_seed: bool = True):
     st.session_state.momentum = 0.0
     st.session_state.narrative = 45.0
     st.session_state.viral = 10.0
+    st.session_state.governabilidade = 42.0
 
     st.session_state.regions = {
         "Norte": 21 + rnd.uniform(-3, 4),
@@ -529,90 +900,106 @@ def apply_setup_choices():
         st.session_state.segments["servidores"] += 2
         st.session_state.time_tv += 1
     elif party == "liberal":
-        st.session_state.cash += 20_000
+        st.session_state.cash += 20000
         st.session_state.regions["Sudeste"] += 3
         st.session_state.segments["empreendedores"] += 5
         st.session_state.segments["agro"] += 2
-        st.session_state.rejection += 1.5
+        st.session_state.rejection += 1.2
     elif party == "verde":
         st.session_state.credibility += 5
         st.session_state.regions["Norte"] += 4
         st.session_state.segments["jovens"] += 4
         st.session_state.intent += 1.0
 
-    bonus = ASSESSORES[advisor]["bonus"]
-    st.session_state.cash += bonus.get("caixa", 0)
-    st.session_state.credibility += bonus.get("credibilidade", 0)
-    st.session_state.media += bonus.get("midia", 0)
-    st.session_state.viral += bonus.get("viral", 0)
-    st.session_state.allies += bonus.get("aliados", 0)
-    st.session_state.time_tv += bonus.get("tempo_tv", 0)
-    st.session_state.risk = clamp(st.session_state.risk + bonus.get("risco", 0), 0, 100)
-    st.session_state.narrative += bonus.get("narrativa", 0)
-    st.session_state.momentum += bonus.get("momentum", 0)
+    for key, val in ASSESSORES[advisor]["bonus"].items():
+        if key == "caixa":
+            st.session_state.cash += val
+        elif key == "credibilidade" or key == "credibility":
+            st.session_state.credibility += val
+        elif key == "media":
+            st.session_state.media += val
+        elif key == "viral":
+            st.session_state.viral += val
+        elif key == "allies":
+            st.session_state.allies += val
+        elif key == "time_tv":
+            st.session_state.time_tv += val
+        elif key == "risk":
+            st.session_state.risk += val
+        elif key == "narrativa":
+            st.session_state.narrative += val
+        elif key == "momentum":
+            st.session_state.momentum += val
+        elif key == "governabilidade":
+            st.session_state.governabilidade += val
 
     if diff == "Fácil":
         st.session_state.intent += 3
-        st.session_state.cash += 25_000
+        st.session_state.cash += 25000
         st.session_state.energy += 10
         st.session_state.rejection -= 2
         st.session_state.risk -= 4
     elif diff == "Difícil":
         st.session_state.intent -= 2
-        st.session_state.cash -= 25_000
+        st.session_state.cash -= 25000
         st.session_state.rejection += 2
         st.session_state.risk += 5
     elif diff == "Hardcore":
         st.session_state.intent -= 4
-        st.session_state.cash -= 45_000
-        st.session_state.energy -= 10
+        st.session_state.cash -= 45000
         st.session_state.rejection += 4
-        st.session_state.risk += 10
+        st.session_state.risk += 8
+        st.session_state.energy -= 8
 
-    st.session_state.intent = clamp(st.session_state.intent, 5, 60)
-    st.session_state.rejection = clamp(st.session_state.rejection, 5, 80)
-    st.session_state.energy = clamp(st.session_state.energy, 10, 100)
-    st.session_state.media = clamp(st.session_state.media, 5, 100)
-    st.session_state.started = True
+    generate_event()
 
 
+# =========================================================
+# ENGINE
+# =========================================================
 def get_available_events() -> List[EventCard]:
     day_phase = phase_for_day(st.session_state.day, st.session_state.total_days)
-    recent = set(st.session_state.used_events[-8:])
-    pool = [e for e in EVENTS if e.id not in recent and event_matches_phase(e.phase, day_phase)]
+    pool = [
+        e for e in EVENTS
+        if not e.followup_only
+        and event_matches_phase(e.phase, day_phase)
+        and e.id not in st.session_state.used_events[-12:]
+    ]
     if not pool:
-        pool = [e for e in EVENTS if event_matches_phase(e.phase, day_phase)]
+        pool = [e for e in EVENTS if not e.followup_only and event_matches_phase(e.phase, day_phase)]
     return pool
 
 
-def weighted_event_pick(pool: List[EventCard]) -> EventCard:
-    weights = []
-    for e in pool:
-        weight = 1.0
-        if e.tone == "crisis" and (st.session_state.risk > 40 or st.session_state.rejection > 35):
-            weight += 1.8
-        if e.tone == "good" and st.session_state.momentum > 4:
-            weight += 1.2
-        if e.category == "jurídico" and st.session_state.risk > 35:
-            weight += 0.8
-        if e.category == "finanças" and st.session_state.cash < 50_000:
-            weight += 1.3
-        if e.category == "aliança" and st.session_state.allies < 45:
-            weight += 1.2
-        weights.append(weight)
-    return random.choices(pool, weights=weights, k=1)[0]
-
-
 def generate_event():
+    if st.session_state.followup_queue:
+        event_id = st.session_state.followup_queue.pop(0)
+        for event in EVENTS:
+            if event.id == event_id:
+                st.session_state.event = event
+                return
     pool = get_available_events()
-    st.session_state.event = weighted_event_pick(pool)
+    weights = []
+    for event in pool:
+        weight = 1.0
+        if event.tone == "crisis" and st.session_state.risk > 35:
+            weight += 0.6
+        if event.category == "midia" and st.session_state.media > 55:
+            weight += 0.4
+        if event.category == "politica" and st.session_state.allies < 45:
+            weight += 0.4
+        if event.category == "digital" and st.session_state.viral > 28:
+            weight += 0.4
+        weights.append(weight)
+    st.session_state.event = random.choices(pool, weights=weights, k=1)[0]
 
 
 def option_enabled(option: Option) -> bool:
-    req = option.requires or {}
-    for key, value in req.items():
+    if not option.requirement:
+        return True
+    req = option.requirement
+    for key, min_value in req.items():
         current = getattr_proxy(key)
-        if current < value:
+        if current < min_value:
             return False
     return True
 
@@ -621,202 +1008,229 @@ def getattr_proxy(name: str) -> float:
     mapping = {
         "cash": st.session_state.cash,
         "energy": st.session_state.energy,
-        "media": st.session_state.media,
-        "risk": st.session_state.risk,
-        "credibility": st.session_state.credibility,
         "intent": st.session_state.intent,
+        "rejection": st.session_state.rejection,
+        "risk": st.session_state.risk,
+        "allies": st.session_state.allies,
+        "credibility": st.session_state.credibility,
     }
-    return mapping.get(name, 0)
+    return mapping.get(name, 0.0)
 
 
 def apply_effects(effects: Dict[str, float], risky: bool = False):
-    advisor = st.session_state.advisor
-    mult = 1.0
-    if st.session_state.difficulty == "Fácil":
-        mult = 1.08
-    elif st.session_state.difficulty == "Difícil":
-        mult = 0.94
-    elif st.session_state.difficulty == "Hardcore":
-        mult = 0.88
-
-    if advisor == "juridico" and risky:
-        effects = effects.copy()
-        effects["risk"] = effects.get("risk", 0) * 0.55
-        effects["credibility"] = effects.get("credibility", 0) + 0.8
-    elif advisor == "comunicacao" and ("midia" in effects or "viral" in effects):
-        effects = effects.copy()
-        effects["midia"] = effects.get("midia", 0) * 1.2
-        effects["viral"] = effects.get("viral", 0) * 1.25
-    elif advisor == "financeiro" and ("caixa" in effects or "cash" in effects):
-        effects = effects.copy()
-        effects["caixa"] = effects.get("caixa", 0) * 1.15
-    elif advisor == "politico" and ("aliados" in effects or "tempo_tv" in effects):
-        effects = effects.copy()
-        effects["aliados"] = effects.get("aliados", 0) * 1.15
-        effects["tempo_tv"] = effects.get("tempo_tv", 0) * 1.20
-    elif advisor == "estrategista" and "intencao" in effects:
-        effects = effects.copy()
-        effects["intencao"] = effects.get("intencao", 0) * 1.15
-
-    st.session_state.intent = clamp(st.session_state.intent + effects.get("intencao", 0) * mult, 0, 80)
-    st.session_state.rejection = clamp(st.session_state.rejection + effects.get("rejeicao", 0), 0, 95)
-    st.session_state.credibility = clamp(st.session_state.credibility + effects.get("credibilidade", 0), 0, 100)
-    st.session_state.cash = max(0.0, st.session_state.cash + effects.get("caixa", 0) + effects.get("cash", 0))
-    st.session_state.energy = clamp(st.session_state.energy + effects.get("energia", -2), 0, 100)
-    st.session_state.media = clamp(st.session_state.media + effects.get("midia", 0), 0, 100)
-    st.session_state.risk = clamp(st.session_state.risk + effects.get("risco", 0) + effects.get("risk", 0), 0, 100)
-    st.session_state.allies = clamp(st.session_state.allies + effects.get("aliados", 0), 0, 100)
-    st.session_state.time_tv = clamp(st.session_state.time_tv + effects.get("tempo_tv", 0), 0, 100)
+    if not effects:
+        return
+    st.session_state.intent = clamp(st.session_state.intent + effects.get("intent", 0), 0, 70)
+    st.session_state.rejection = clamp(st.session_state.rejection + effects.get("rejection", 0), 0, 80)
+    st.session_state.credibility = clamp(st.session_state.credibility + effects.get("credibility", 0), 0, 100)
+    st.session_state.cash = max(0.0, st.session_state.cash + effects.get("cash", 0))
+    st.session_state.energy = clamp(st.session_state.energy + effects.get("energy", 0), 0, 100)
+    st.session_state.media = clamp(st.session_state.media + effects.get("media", 0), 0, 100)
+    st.session_state.risk = clamp(st.session_state.risk + effects.get("risk", 0), 0, 100)
+    st.session_state.allies = clamp(st.session_state.allies + effects.get("allies", 0), 0, 100)
+    st.session_state.time_tv = clamp(st.session_state.time_tv + effects.get("time_tv", 0), 0, 100)
     st.session_state.momentum = clamp(st.session_state.momentum + effects.get("momentum", 0), -20, 20)
-    st.session_state.narrative = clamp(st.session_state.narrative + effects.get("narrativa", 0), 0, 100)
+    st.session_state.narrative = clamp(st.session_state.narrative + effects.get("narrative", 0), 0, 100)
     st.session_state.viral = clamp(st.session_state.viral + effects.get("viral", 0), 0, 100)
+    st.session_state.governabilidade = clamp(st.session_state.governabilidade + effects.get("governabilidade", 0), 0, 100)
 
-    # microtargeting -> segmentos/regiões
-    region_map = {
-        "nordeste": "Nordeste",
-        "sudeste": "Sudeste",
-        "sul": "Sul",
-        "centro-oeste": "Centro-Oeste",
-        "norte": "Norte",
+    region_key_map = {
+        "Norte": "Norte",
+        "Nordeste": "Nordeste",
+        "Centro-Oeste": "Centro-Oeste",
+        "Sudeste": "Sudeste",
+        "Sul": "Sul",
     }
-    for key, region_name in region_map.items():
+    for key in region_key_map:
         if key in effects:
-            st.session_state.regions[region_name] = clamp(st.session_state.regions[region_name] + effects[key] * 0.8, 0, 80)
+            st.session_state.regions[key] = clamp(st.session_state.regions[key] + effects[key] * 0.8, 0, 80)
 
-    segment_keys = ["social", "gestao", "agro", "valores", "digital", "mercado", "jovens", "evangelicos"]
-    for seg in list(st.session_state.segments.keys()):
+    for seg in st.session_state.segments.keys():
         if seg in effects:
             st.session_state.segments[seg] = clamp(st.session_state.segments[seg] + effects[seg] * 0.8, 0, 80)
 
-    # distribui efeitos temáticos em segmentos relacionados
-    if effects.get("social"):
-        st.session_state.segments["periferia"] = clamp(st.session_state.segments["periferia"] + effects["social"] * 0.8, 0, 80)
-        st.session_state.regions["Nordeste"] = clamp(st.session_state.regions["Nordeste"] + effects["social"] * 0.35, 0, 80)
-    if effects.get("gestao"):
-        st.session_state.segments["classe_media"] = clamp(st.session_state.segments["classe_media"] + effects["gestao"] * 0.65, 0, 80)
-        st.session_state.segments["servidores"] = clamp(st.session_state.segments["servidores"] + effects["gestao"] * 0.5, 0, 80)
-    if effects.get("mercado"):
-        st.session_state.segments["empreendedores"] = clamp(st.session_state.segments["empreendedores"] + effects["mercado"] * 0.75, 0, 80)
-        st.session_state.regions["Sudeste"] = clamp(st.session_state.regions["Sudeste"] + effects["mercado"] * 0.35, 0, 80)
+    # thematic spillover
+    if effects.get("periferia"):
+        st.session_state.regions["Nordeste"] = clamp(st.session_state.regions["Nordeste"] + effects["periferia"] * 0.25, 0, 80)
     if effects.get("agro"):
-        st.session_state.segments["agro"] = clamp(st.session_state.segments["agro"] + effects["agro"] * 0.9, 0, 80)
-        st.session_state.regions["Centro-Oeste"] = clamp(st.session_state.regions["Centro-Oeste"] + effects["agro"] * 0.5, 0, 80)
+        st.session_state.regions["Centro-Oeste"] = clamp(st.session_state.regions["Centro-Oeste"] + effects["agro"] * 0.4, 0, 80)
         st.session_state.regions["Sul"] = clamp(st.session_state.regions["Sul"] + effects["agro"] * 0.3, 0, 80)
-    if effects.get("digital"):
-        st.session_state.segments["jovens"] = clamp(st.session_state.segments["jovens"] + effects["digital"] * 0.7, 0, 80)
+    if effects.get("evangelicos"):
+        st.session_state.regions["Nordeste"] = clamp(st.session_state.regions["Nordeste"] + effects["evangelicos"] * 0.18, 0, 80)
+    if effects.get("empreendedores"):
+        st.session_state.regions["Sudeste"] = clamp(st.session_state.regions["Sudeste"] + effects["empreendedores"] * 0.28, 0, 80)
+    if effects.get("jovens"):
+        st.session_state.viral = clamp(st.session_state.viral + effects["jovens"] * 0.25, 0, 100)
 
-    if risky:
-        st.session_state.scandals += 1 if (effects.get("risco", 0) + effects.get("risk", 0)) > 8 else 0
+    if risky and (effects.get("risk", 0) > 0 or effects.get("rejection", 0) > 1.0):
+        st.session_state.scandals += 1
 
-    positive = effects.get("intencao", 0) + effects.get("credibilidade", 0) / 4 - effects.get("rejeicao", 0)
+    positive = effects.get("intent", 0) + effects.get("credibility", 0) / 4 - effects.get("rejection", 0)
     if positive > 0.8:
         st.session_state.combo += 1
     else:
         st.session_state.combo = 0
     st.session_state.max_combo = max(st.session_state.max_combo, st.session_state.combo)
     if st.session_state.combo >= 3:
-        st.session_state.momentum = clamp(st.session_state.momentum + 1.5, -20, 20)
+        st.session_state.momentum = clamp(st.session_state.momentum + 1.0, -20, 20)
+
+
+def add_consequence(cons: Consequence):
+    entry = {
+        "key": cons.key,
+        "title": cons.title,
+        "desc": cons.desc,
+        "days_left": cons.duration,
+        "daily": dict(cons.daily),
+        "end_effects": dict(cons.end_effects),
+        "severity": cons.severity,
+        "followup_event": cons.followup_event,
+        "followup_chance": cons.followup_chance,
+        "triggered_followup": False,
+    }
+    st.session_state.active_consequences.append(entry)
+
+
+def process_consequences() -> List[str]:
+    notes = []
+    remaining = []
+    for cons in st.session_state.active_consequences:
+        apply_effects(cons["daily"])
+        st.session_state.consequence_turns_survived += 1
+        notes.append(f"{cons['title']}: efeitos contínuos aplicados.")
+        if cons["followup_event"] and not cons["triggered_followup"] and random.random() < cons["followup_chance"]:
+            st.session_state.followup_queue.append(cons["followup_event"])
+            cons["triggered_followup"] = True
+            notes.append(f"Consequência escalou para: {cons['followup_event'].replace('_', ' ')}")
+        cons["days_left"] -= 1
+        if cons["days_left"] <= 0:
+            apply_effects(cons["end_effects"])
+        else:
+            remaining.append(cons)
+    st.session_state.active_consequences = remaining
+    return notes
 
 
 def rival_turn():
-    for key, rival in st.session_state.rivals.items():
-        drift = random.uniform(-0.8, 1.0)
+    for _, rival in st.session_state.rivals.items():
+        drift = random.uniform(-0.7, 0.9)
         if rival["perfil"] == "digital":
-            drift += (0.12 if st.session_state.viral < 25 else -0.08) * random.uniform(0.5, 1.2)
+            drift += 0.16 if st.session_state.viral < 24 else -0.06
         if rival["perfil"] == "gestao":
-            drift += 0.15 if st.session_state.credibility < 45 else -0.05
+            drift += 0.15 if st.session_state.credibility < 46 else -0.05
         if rival["perfil"] == "estrutura":
             drift += 0.14 if st.session_state.allies < 48 else -0.04
-        rival["voto"] = clamp(rival["voto"] + drift, 8, 45)
-        rival["rejeicao"] = clamp(rival["rejeicao"] + random.uniform(-0.5, 0.9), 10, 60)
+        rival["voto"] = clamp(rival["voto"] + drift, 8, 42)
+        rival["rejeicao"] = clamp(rival["rejeicao"] + random.uniform(-0.4, 0.8), 10, 60)
 
 
 def daily_decay_and_growth():
-    # desgaste natural
-    st.session_state.energy = clamp(st.session_state.energy - random.uniform(3, 6), 0, 100)
-    st.session_state.cash = max(0.0, st.session_state.cash - random.uniform(3500, 9500))
-    st.session_state.media = clamp(st.session_state.media + random.uniform(-3, 3) + st.session_state.momentum * 0.06, 0, 100)
-    st.session_state.risk = clamp(st.session_state.risk + random.uniform(-1.5, 2.5), 0, 100)
+    st.session_state.energy = clamp(st.session_state.energy - random.uniform(2.5, 5.5), 0, 100)
+    st.session_state.cash = max(0.0, st.session_state.cash - random.uniform(3500, 9000))
+    st.session_state.media = clamp(st.session_state.media + random.uniform(-2.5, 2.5) + st.session_state.momentum * 0.05, 0, 100)
+    st.session_state.risk = clamp(st.session_state.risk + random.uniform(-1.0, 2.0), 0, 100)
 
-    # conversão sistêmica para intenção de voto
-    regional_score = sum(st.session_state.regions[r] * REGIOES[r]["peso"] for r in REGIOES) / 100
-    segment_score = sum(st.session_state.segments[s] * SEGMENTOS[s]["peso"] for s in SEGMENTOS) / 100
-    structure_bonus = (st.session_state.media * 0.04 + st.session_state.time_tv * 0.05 + st.session_state.allies * 0.03)
-    narrative_bonus = (st.session_state.credibility * 0.035 + st.session_state.narrative * 0.025 + st.session_state.momentum * 0.3)
-    penalty = st.session_state.rejection * 0.07 + st.session_state.risk * 0.05
-    target_intent = 8 + regional_score * 0.18 + segment_score * 0.17 + structure_bonus + narrative_bonus - penalty
-    target_intent = clamp(target_intent, 4, 65)
+    region_avg = sum(st.session_state.regions.values()) / len(st.session_state.regions)
+    segment_score = 0.0
+    for seg, info in SEGMENTOS.items():
+        segment_score += st.session_state.segments[seg] * info["peso"]
+    segment_score /= sum(v["peso"] for v in SEGMENTOS.values())
 
-    # converge aos poucos para parecer campanha real
-    st.session_state.intent = clamp(st.session_state.intent * 0.60 + target_intent * 0.40, 0, 80)
+    structural = (
+        st.session_state.credibility * 0.18
+        + st.session_state.media * 0.12
+        + st.session_state.time_tv * 0.08
+        + st.session_state.allies * 0.08
+        + region_avg * 0.22
+        + segment_score * 0.20
+        + st.session_state.momentum * 0.55
+        + st.session_state.viral * 0.07
+        - st.session_state.rejection * 0.22
+        - st.session_state.risk * 0.16
+    )
+    target_vote = clamp(12 + structural / 3.3, 6, 55)
 
-    # votação útil em reta final
-    if st.session_state.day > st.session_state.total_days - 5 and st.session_state.intent > 24:
-        third_best = sorted([rv["voto"] for rv in st.session_state.rivals.values()], reverse=True)[-1]
-        if st.session_state.intent > third_best:
-            st.session_state.intent = clamp(st.session_state.intent + 0.6, 0, 80)
+    # voto útil na reta final
+    if st.session_state.day >= st.session_state.total_days - 5 and st.session_state.intent > 23:
+        target_vote += 1.4
+    if st.session_state.day >= st.session_state.total_days - 3 and st.session_state.rejection > 36:
+        target_vote -= 1.0
 
-    # pequenas flutuações regionais
-    for region in st.session_state.regions:
-        st.session_state.regions[region] = clamp(st.session_state.regions[region] + random.uniform(-1.1, 1.4) + st.session_state.momentum * 0.02, 0, 80)
-    for seg in st.session_state.segments:
-        st.session_state.segments[seg] = clamp(st.session_state.segments[seg] + random.uniform(-1.2, 1.2), 0, 80)
+    st.session_state.intent = clamp(st.session_state.intent + (target_vote - st.session_state.intent) * 0.18, 4, 60)
+    st.session_state.rejection = clamp(st.session_state.rejection + random.uniform(-0.5, 0.9), 4, 65)
 
 
 def add_history(label: str, option_text: str):
     st.session_state.history.insert(0, f"Dia {st.session_state.day}: {label} → {option_text}")
-    st.session_state.history = st.session_state.history[:12]
+    st.session_state.history = st.session_state.history[:18]
 
 
 def unlock_achievements():
-    achievements = st.session_state.achievements
-    if st.session_state.viral >= 25 and "primeiro_viral" not in achievements:
-        achievements.append("primeiro_viral")
-    if st.session_state.cash >= 180_000 and "caixa_forte" not in achievements:
-        achievements.append("caixa_forte")
-    if st.session_state.media >= 72 and "mestre_midia" not in achievements:
-        achievements.append("mestre_midia")
-    if st.session_state.risk <= 10 and st.session_state.day >= 12 and "blindado" not in achievements:
-        achievements.append("blindado")
-    if st.session_state.max_combo >= 4 and "furacao" not in achievements:
-        achievements.append("furacao")
-    if st.session_state.regions["Nordeste"] >= 40 and "lider_nordeste" not in achievements:
-        achievements.append("lider_nordeste")
-    if st.session_state.regions["Sudeste"] >= 38 and "lider_sudeste" not in achievements:
-        achievements.append("lider_sudeste")
-    if st.session_state.scandals == 0 and st.session_state.day >= st.session_state.total_days and "sem_escandalo" not in achievements:
-        achievements.append("sem_escandalo")
-    if st.session_state.recovery_flag and st.session_state.intent >= 28 and "virou_o_jogo" not in achievements:
-        achievements.append("virou_o_jogo")
+    if st.session_state.viral >= 25 and "primeiro_viral" not in st.session_state.achievements:
+        st.session_state.achievements.append("primeiro_viral")
+    if st.session_state.recovery_flag and st.session_state.intent >= 25 and "virou_o_jogo" not in st.session_state.achievements:
+        st.session_state.achievements.append("virou_o_jogo")
+    if st.session_state.cash >= 200000 and "caixa_forte" not in st.session_state.achievements:
+        st.session_state.achievements.append("caixa_forte")
+    if st.session_state.media >= 70 and "mestre_midia" not in st.session_state.achievements:
+        st.session_state.achievements.append("mestre_midia")
+    if st.session_state.risk <= 10 and st.session_state.day >= 18 and "blindado" not in st.session_state.achievements:
+        st.session_state.achievements.append("blindado")
+    if st.session_state.max_combo >= 4 and "furacao" not in st.session_state.achievements:
+        st.session_state.achievements.append("furacao")
+    if st.session_state.regions["Nordeste"] >= 33 and "lider_nordeste" not in st.session_state.achievements:
+        st.session_state.achievements.append("lider_nordeste")
+    if st.session_state.regions["Sudeste"] >= 31 and "lider_sudeste" not in st.session_state.achievements:
+        st.session_state.achievements.append("lider_sudeste")
+    if st.session_state.scandals == 0 and st.session_state.day >= 25 and "sem_escandalo" not in st.session_state.achievements:
+        st.session_state.achievements.append("sem_escandalo")
+    if st.session_state.consequence_turns_survived >= 6 and "consequencia_mestre" not in st.session_state.achievements:
+        st.session_state.achievements.append("consequencia_mestre")
+    if st.session_state.scandals >= 2 and st.session_state.intent >= 24 and "sobreviveu_crise" not in st.session_state.achievements:
+        st.session_state.achievements.append("sobreviveu_crise")
 
 
 def check_game_over():
     if st.session_state.intent <= 5:
         st.session_state.game_over = True
-        st.session_state.result_text = "Sua candidatura evaporou nas pesquisas. Virou figurante do próprio jogo."
+        st.session_state.victory = False
+        st.session_state.result_text = "Sua intenção de voto derreteu. A campanha virou rodapé de análise e acabou antes da urna."
     elif st.session_state.cash <= 0:
         st.session_state.game_over = True
-        st.session_state.result_text = "O caixa secou. Sem gasolina política, a campanha morreu na estrada."
+        st.session_state.victory = False
+        st.session_state.result_text = "O caixa acabou. Você tinha discurso, mas não tinha gasolina eleitoral."
     elif st.session_state.energy <= 0:
         st.session_state.game_over = True
-        st.session_state.result_text = "Você colapsou na maratona. O ritmo da campanha engoliu seu candidato."
+        st.session_state.victory = False
+        st.session_state.result_text = "Você apagou no meio da campanha. O corpo não acompanhou o roteiro."
     elif st.session_state.risk >= 92:
         st.session_state.game_over = True
-        st.session_state.result_text = "A campanha afundou num mar de risco jurídico e crise de imagem."
-    elif st.session_state.rejection >= 72:
-        st.session_state.game_over = True
-        st.session_state.result_text = "A rejeição ficou tóxica demais. Nem viral salva quando metade do país fecha a cara."
+        st.session_state.victory = False
+        st.session_state.result_text = "A campanha entrou em espiral jurídica. O noticiário te engoliu antes da reta final."
 
 
 def simulate_final_result():
+    region_vote = 0.0
+    for region, info in REGIOES.items():
+        region_vote += st.session_state.regions[region] * info["peso"]
+    region_vote /= sum(v["peso"] for v in REGIOES.values())
+
+    segment_vote = 0.0
+    for seg, info in SEGMENTOS.items():
+        segment_vote += st.session_state.segments[seg] * info["peso"]
+    segment_vote /= sum(v["peso"] for v in SEGMENTOS.values())
+
     your_vote = clamp(
-        st.session_state.intent
-        + st.session_state.media * 0.03
-        + st.session_state.time_tv * 0.02
-        + st.session_state.allies * 0.015
-        - st.session_state.rejection * 0.05,
-        5,
-        65,
+        st.session_state.intent * 0.44
+        + region_vote * 0.20
+        + segment_vote * 0.18
+        + st.session_state.credibility * 0.10
+        + st.session_state.time_tv * 0.04
+        + st.session_state.governabilidade * 0.03
+        + st.session_state.momentum * 0.15
+        - st.session_state.rejection * 0.20,
+        8,
+        58,
     )
 
     rivals = {k: clamp(v["voto"], 6, 45) for k, v in st.session_state.rivals.items()}
@@ -831,16 +1245,16 @@ def simulate_final_result():
         st.session_state.victory = True
         st.session_state.game_over = True
         st.session_state.first_turn = True
-        st.session_state.result_text = f"Você venceu no 1º turno com {your_vote:.1f}% dos votos válidos. Brasil em choque e sua campanha entra para o folclore político."
+        st.session_state.result_text = f"Você venceu no 1º turno com {your_vote:.1f}% dos votos válidos. O país entrou no modo ressaca eleitoral e seu nome virou assunto de mesa, feed e grupo de família."
         if "primeiro_turno" not in st.session_state.achievements:
             st.session_state.achievements.append("primeiro_turno")
         return
 
-    # segundo turno
-    your_transfer = (100 - your_vote - top_rival_vote) * (
-        0.50 + (st.session_state.credibility - st.session_state.rejection) / 220 + st.session_state.narrative / 300
+    transferable = max(0.0, 100 - your_vote - top_rival_vote)
+    your_transfer = transferable * (
+        0.49 + (st.session_state.credibility - st.session_state.rejection) / 220 + st.session_state.governabilidade / 320
     )
-    rival_transfer = (100 - your_vote - top_rival_vote) - your_transfer
+    rival_transfer = transferable - your_transfer
     second_you = clamp(your_vote + your_transfer, 20, 80)
     second_rival = clamp(top_rival_vote + rival_transfer, 20, 80)
     total2 = second_you + second_rival
@@ -850,14 +1264,22 @@ def simulate_final_result():
     st.session_state.game_over = True
     if second_you > second_rival:
         st.session_state.victory = True
-        st.session_state.result_text = f"Você foi ao 2º turno contra {st.session_state.rivals[top_rival_key]['nome']} e venceu por {second_you:.1f}% a {second_rival:.1f}%. Foi no limite, mas foi."
+        st.session_state.result_text = f"Você foi ao 2º turno contra {st.session_state.rivals[top_rival_key]['nome']} e venceu por {second_you:.1f}% a {second_rival:.1f}%. Vitória sofrida, daquelas que deixam metade do país sem dormir e a outra metade sem voz."
     else:
         st.session_state.victory = False
-        st.session_state.result_text = f"Você chegou ao 2º turno, mas perdeu para {st.session_state.rivals[top_rival_key]['nome']} por {second_rival:.1f}% a {second_you:.1f}%. Doeu — e rende revanche."
+        st.session_state.result_text = f"Você chegou ao 2º turno, mas perdeu para {st.session_state.rivals[top_rival_key]['nome']} por {second_rival:.1f}% a {second_you:.1f}%. Faltou um pouco de fôlego, viabilidade ou sangue frio."
 
 
 def next_day(option: Option):
+    notes = []
     apply_effects(option.effects, risky=option.risky)
+    for cons in option.consequences:
+        add_consequence(cons)
+        notes.append(f"Consequência ativada: {cons.title}")
+
+    cons_notes = process_consequences()
+    notes.extend(cons_notes)
+
     rival_turn()
     daily_decay_and_growth()
     unlock_achievements()
@@ -871,7 +1293,7 @@ def next_day(option: Option):
     st.session_state.rej_history.append(st.session_state.rejection)
     st.session_state.day_history.append(st.session_state.day)
 
-    st.session_state.last_feedback = option.summary
+    st.session_state.last_feedback = option.summary + ("\n\n" + " | ".join(notes) if notes else "")
     check_game_over()
     if st.session_state.game_over:
         return
@@ -883,23 +1305,9 @@ def next_day(option: Option):
         generate_event()
 
 
-def fmt_money(v: float) -> str:
-    return f"R$ {v:,.0f}".replace(",", "X").replace(".", ",").replace("X", ".")
-
-
-def bar_html(label: str, value: float, color: str) -> str:
-    return f"""
-    <div style='margin-bottom:10px'>
-      <div style='display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px'>
-        <span><strong>{label}</strong></span><span>{value:.1f}%</span>
-      </div>
-      <div style='background:#e5e7eb;border-radius:999px;height:10px;overflow:hidden'>
-        <div style='background:{color};width:{max(1,value)}%;height:10px;border-radius:999px'></div>
-      </div>
-    </div>
-    """
-
-
+# =========================================================
+# UI
+# =========================================================
 def render_metric_cards():
     c1, c2, c3, c4, c5, c6 = st.columns(6)
     cards = [
@@ -912,13 +1320,16 @@ def render_metric_cards():
     ]
     for col, title, value, desc in cards:
         with col:
-            st.markdown(f"<div class='metric-card'><h4>{title}</h4><h2>{value}</h2><span>{desc}</span></div>", unsafe_allow_html=True)
+            st.markdown(
+                f"<div class='metric-card'><h4>{title}</h4><h2>{value}</h2><span>{desc}</span></div>",
+                unsafe_allow_html=True,
+            )
 
 
 def sidebar_panel():
     with st.sidebar:
-        st.markdown("## 🎛️ Painel de Campanha")
-        st.caption(f"Seed da campanha: {st.session_state.get('seed','-')}")
+        st.markdown("## 🎛️ Painel da campanha")
+        st.caption(f"Seed: {st.session_state.get('seed', '-')}")
         if st.session_state.started:
             st.write(f"**Dia:** {st.session_state.day}/{st.session_state.total_days}")
             st.write(f"**Partido:** {PARTIDOS[st.session_state.party]['nome']}")
@@ -927,174 +1338,227 @@ def sidebar_panel():
             st.progress(clamp(st.session_state.intent / 50, 0, 1), text="competitividade")
             st.progress(clamp((100 - st.session_state.rejection) / 100, 0, 1), text="aceitação")
             st.progress(clamp(st.session_state.energy / 100, 0, 1), text="energia")
+            st.progress(clamp(st.session_state.governabilidade / 100, 0, 1), text="governabilidade")
 
             if st.session_state.combo >= 2:
                 st.success(f"🔥 Combo ativo x{st.session_state.combo}")
+            if st.session_state.active_consequences:
+                st.warning(f"⚠️ {len(st.session_state.active_consequences)} consequência(s) ativa(s)")
             if st.session_state.risk > 55:
                 st.error("🚨 Campanha flertando com crise grande")
             elif st.session_state.risk > 35:
                 st.warning("⚠️ Risco subindo")
-            if st.session_state.cash < 35_000:
+            if st.session_state.cash < 35000:
                 st.warning("💸 Caixa crítico")
             if st.session_state.intent < 18:
-                st.warning("📉 Você precisa virar o jogo")
+                st.warning("📉 Você está vivo, mas não confortável")
 
-            st.markdown("### 🧭 Regiões")
-            region_colors = {
-                "Norte": "#16a34a",
-                "Nordeste": "#f97316",
-                "Centro-Oeste": "#84cc16",
-                "Sudeste": "#2563eb",
-                "Sul": "#7c3aed",
-            }
-            for reg, val in st.session_state.regions.items():
-                st.markdown(bar_html(reg, val, region_colors[reg]), unsafe_allow_html=True)
+            st.markdown("---")
+            st.markdown("### Oposição")
+            for _, rival in sorted(st.session_state.rivals.items(), key=lambda x: x[1]["voto"], reverse=True):
+                st.write(f"**{rival['nome']}** — {rival['voto']:.1f}%")
 
-            st.markdown("### 🏅 Conquistas")
+            st.markdown("---")
+            st.markdown("### Conquistas")
             if st.session_state.achievements:
                 for ach in st.session_state.achievements[-6:]:
-                    st.markdown(f"- {ACHIEVEMENTS[ach]}")
+                    st.markdown(f"<div class='achievement'>{ACHIEVEMENTS[ach]}</div>", unsafe_allow_html=True)
             else:
-                st.caption("Nenhuma conquista ainda.")
+                st.caption("Nenhuma desbloqueada ainda.")
 
-        st.markdown("---")
-        if st.button("🔄 Nova campanha", use_container_width=True):
-            init_state(reset_seed=True)
-            st.rerun()
+            st.markdown("---")
+            if st.button("🔄 Reiniciar campanha", use_container_width=True):
+                init_state(True)
+                st.rerun()
 
 
 def render_charts():
-    col1, col2 = st.columns([1.4, 1])
-    with col1:
+    left, right = st.columns([1.2, 1])
+
+    with left:
         fig = go.Figure()
-        fig.add_trace(go.Scatter(x=st.session_state.day_history, y=st.session_state.poll_history, mode="lines+markers", name="Você"))
-        fig.add_trace(go.Scatter(x=st.session_state.day_history, y=st.session_state.rej_history, mode="lines", name="Rejeição"))
-        fig.update_layout(height=320, margin=dict(l=20, r=20, t=30, b=20), title="Termômetro da campanha")
+        fig.add_trace(go.Scatter(x=st.session_state.day_history, y=st.session_state.poll_history, mode="lines+markers", name="Intenção"))
+        fig.add_trace(go.Scatter(x=st.session_state.day_history, y=st.session_state.rej_history, mode="lines+markers", name="Rejeição"))
+        fig.update_layout(height=310, margin=dict(l=10, r=10, t=30, b=10), title="Pesquisa da campanha")
         st.plotly_chart(fig, use_container_width=True)
-    with col2:
-        rival_names = ["Você"] + [v["nome"] for v in st.session_state.rivals.values()]
-        rival_votes = [st.session_state.intent] + [v["voto"] for v in st.session_state.rivals.values()]
-        fig2 = go.Figure(go.Bar(x=rival_names, y=rival_votes))
-        fig2.update_layout(height=320, margin=dict(l=20, r=20, t=30, b=20), title="Corrida eleitoral")
-        st.plotly_chart(fig2, use_container_width=True)
+
+    with right:
+        st.markdown("<div class='panel'><h4 style='margin-top:0'>Mapa por regiões</h4>", unsafe_allow_html=True)
+        colors = {
+            "Norte": "#0ea5e9",
+            "Nordeste": "#f59e0b",
+            "Centro-Oeste": "#22c55e",
+            "Sudeste": "#6366f1",
+            "Sul": "#ef4444",
+        }
+        for region, value in st.session_state.regions.items():
+            st.markdown(
+                f"<div class='region-row'><div style='display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px'><span><strong>{region}</strong></span><span>{value:.1f}%</span></div><div style='background:#e5e7eb;border-radius:999px;height:10px;overflow:hidden'><div style='background:{colors[region]};width:{max(1,value)}%;height:10px;border-radius:999px'></div></div></div>",
+                unsafe_allow_html=True,
+            )
+        st.markdown("</div>", unsafe_allow_html=True)
 
 
 def render_setup():
-    st.markdown("<div class='hero'><h1>🇧🇷 Candidato 2026: Viral Edition</h1><p>Um simulador de campanha presidencial com rejeição, voto útil, 2º turno, crise, coalizão, viral e eventos inspirados na política brasileira.</p></div>", unsafe_allow_html=True)
-
-    st.markdown("### Monte sua campanha")
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        st.session_state.party = st.selectbox(
-            "Partido",
-            list(PARTIDOS.keys()),
-            format_func=lambda x: f"{PARTIDOS[x]['nome']} — {PARTIDOS[x]['slogan']}",
-        )
-    with c2:
-        st.session_state.advisor = st.selectbox(
-            "Assessor principal",
-            list(ASSESSORES.keys()),
-            format_func=lambda x: f"{ASSESSORES[x]['icone']} {ASSESSORES[x]['nome']} — {ASSESSORES[x]['especialidade']}",
-        )
-    with c3:
-        st.session_state.difficulty = st.selectbox("Dificuldade", ["Fácil", "Normal", "Difícil", "Hardcore"], index=1)
-
-    st.markdown("### O que muda nesta versão")
-    cols = st.columns(5)
-    highlights = [
-        ("🧠", "Rejeição separada da intenção de voto"),
-        ("🗺️", "Mapa regional e segmentos sociais"),
-        ("⚖️", "Crises jurídicas e TSE"),
-        ("🔥", "Viral, combo e momentum"),
-        ("🗳️", "1º e 2º turno com transferência de votos"),
-    ]
-    for col, item in zip(cols, highlights):
-        with col:
-            st.markdown(f"<div class='card' style='min-height:120px;text-align:center'><div style='font-size:30px'>{item[0]}</div><div style='font-weight:700;margin-top:8px'>{item[1]}</div></div>", unsafe_allow_html=True)
-
-    st.markdown("### Seu estrategista de confiança")
-    advisor = ASSESSORES[st.session_state.advisor]
-    st.markdown(f"<div class='advisor'><h4 style='margin:0'>{advisor['icone']} {advisor['nome']}</h4><div class='small-muted'>{advisor['descricao']}</div></div>", unsafe_allow_html=True)
-
-    if st.button("🚀 Iniciar campanha", use_container_width=True, type="primary"):
-        init_state(reset_seed=False)
-        apply_setup_choices()
-        generate_event()
-        st.rerun()
-
-
-def render_event():
-    event = st.session_state.event
-    tone_class = "event-crisis" if event.tone == "crisis" else "event-good" if event.tone == "good" else ""
     st.markdown(
-        f"""
-        <div class='event-box {tone_class}'>
-            <h2 style='margin-top:0'>{event.title}</h2>
-            <p style='font-size:15px;line-height:1.55'>{event.desc}</p>
-            {''.join([f"<span class='tag {'tag-red' if event.tone=='crisis' else 'tag-green' if event.tone=='good' else 'tag-blue'}'>{tag}</span>" for tag in event.tags])}
+        """
+        <div class='hero'>
+            <h1>🇧🇷 Candidato 2026: Viral Edition V4</h1>
+            <p>Agora com consequências persistentes, follow-ups, 1º e 2º turno, governabilidade e campanha mais viva.</p>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        st.markdown("### 🏛️ Partido")
+        party = st.radio(
+            "Escolha sua base política",
+            list(PARTIDOS.keys()),
+            format_func=lambda k: f"{PARTIDOS[k]['nome']} — {PARTIDOS[k]['slogan']}",
+            key="party_setup",
+        )
+    with c2:
+        st.markdown("### 🧠 Assessor principal")
+        advisor = st.radio(
+            "Quem puxa sua campanha?",
+            list(ASSESSORES.keys()),
+            format_func=lambda k: f"{ASSESSORES[k]['icone']} {ASSESSORES[k]['nome']}",
+            key="advisor_setup",
+        )
+    with c3:
+        st.markdown("### ⚙️ Dificuldade")
+        diff = st.radio("Nível", ["Fácil", "Normal", "Difícil", "Hardcore"], index=1, key="diff_setup")
+
+    st.markdown("<div class='panel'>", unsafe_allow_html=True)
+    st.write("**O que mudou nesta versão**")
+    st.write(
+        "- respostas geram consequências por vários dias;\n"
+        "- decisões ruins podem voltar como follow-up;\n"
+        "- política, mídia, TSE e alianças se encadeiam;\n"
+        "- vitória considera governabilidade e transferência de votos no 2º turno."
+    )
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    if st.button("🚀 Começar campanha", use_container_width=True):
+        init_state(False)
+        st.session_state.party = party
+        st.session_state.advisor = advisor
+        st.session_state.difficulty = diff
+        st.session_state.started = True
+        apply_setup_choices()
+        st.rerun()
+
+
+def render_active_consequences():
+    st.markdown("### ⏳ Consequências em andamento")
+    if not st.session_state.active_consequences:
+        st.info("Nenhuma consequência ativa agora. Aproveite enquanto o Brasil deixa.")
+        return
+    for cons in st.session_state.active_consequences:
+        badge = "tag-red" if cons["severity"] == "danger" else "tag-green" if cons["severity"] == "good" else "tag-blue"
+        chips = "".join(metric_delta_chip(k, v) for k, v in cons["daily"].items())
+        st.markdown(
+            f"<div class='consequence-card'><strong>{cons['title']}</strong> <span class='tag {badge}'>{cons['days_left']} dia(s)</span><div class='small-muted' style='margin-top:6px'>{cons['desc']}</div><div style='margin-top:8px'>{chips}</div></div>",
+            unsafe_allow_html=True,
+        )
+
+
+def render_event():
+    event = st.session_state.event
+    tone_class = "event-box"
+    if event.tone == "crisis":
+        tone_class += " event-crisis"
+    elif event.tone == "good":
+        tone_class += " event-good"
+    elif event.followup_only:
+        tone_class += " event-followup"
+
+    tag_class = "tag-blue"
+    if event.tone == "crisis":
+        tag_class = "tag-red"
+    elif event.tone == "good":
+        tag_class = "tag-green"
+    elif event.followup_only:
+        tag_class = "tag-purple"
+
+    st.markdown(f"<div class='{tone_class}'>", unsafe_allow_html=True)
+    st.markdown(f"### {event.title}")
+    st.write(event.desc)
+    tags_html = " ".join([f"<span class='tag {tag_class}'>{tag}</span>" for tag in event.tags])
+    st.markdown(tags_html, unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
+
     if st.session_state.last_feedback:
-        klass = "success-strip" if "boa" in st.session_state.last_feedback.lower() or "ótimo" in st.session_state.last_feedback.lower() else "warning-strip"
-        st.markdown(f"<div class='{klass}'>{st.session_state.last_feedback}</div>", unsafe_allow_html=True)
-        st.write("")
+        st.markdown("<div class='success-strip'>" + st.session_state.last_feedback + "</div>", unsafe_allow_html=True)
 
     st.markdown("### Escolha sua resposta")
     for idx, option in enumerate(event.options):
-        st.markdown(
-            f"<div class='choice-box'><div class='choice-title'>{idx+1}. {option.text}</div><div class='small-muted'>{option.summary}</div></div>",
-            unsafe_allow_html=True,
-        )
-        if st.button(f"Escolher opção {idx+1}", key=f"opt_{event.id}_{idx}", use_container_width=True, disabled=not option_enabled(option)):
+        enabled = option_enabled(option)
+        st.markdown("<div class='choice-box'>", unsafe_allow_html=True)
+        st.markdown(f"<div class='choice-title'>{idx+1}. {option.text}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='small-muted'>{option.summary}</div>", unsafe_allow_html=True)
+        if option.consequences:
+            st.caption("Consequências possíveis: " + ", ".join(c.title for c in option.consequences))
+        if option.requirement:
+            st.caption("Exige: " + ", ".join(f"{k} ≥ {v}" for k, v in option.requirement.items()))
+        if st.button("Escolher", key=f"choice_{event.id}_{idx}", use_container_width=True, disabled=not enabled):
             next_day(option)
             st.rerun()
-
-
-def render_results():
-    if st.session_state.victory:
-        st.markdown(f"<div class='success-strip' style='font-size:18px'>{st.session_state.result_text}</div>", unsafe_allow_html=True)
-    else:
-        st.markdown(f"<div class='warning-strip' style='font-size:18px'>{st.session_state.result_text}</div>", unsafe_allow_html=True)
-
-    st.write("")
-    render_charts()
-    st.markdown("### Últimos movimentos")
-    for line in st.session_state.history[:8]:
-        st.write(f"- {line}")
+        st.markdown("</div>", unsafe_allow_html=True)
 
 
 def render_bottom_panels():
-    col1, col2, col3 = st.columns([1, 1, 1.1])
-    with col1:
-        st.markdown("### 👥 Segmentos")
-        for seg, val in sorted(st.session_state.segments.items(), key=lambda x: x[1], reverse=True):
-            st.markdown(bar_html(seg.replace("_", " ").title(), val, "#2563eb"), unsafe_allow_html=True)
-    with col2:
-        st.markdown("### 🏛️ Estrutura")
-        st.metric("Aliados", f"{st.session_state.allies:.0f}")
-        st.metric("Tempo de TV", f"{st.session_state.time_tv:.0f}")
-        st.metric("Credibilidade", f"{st.session_state.credibility:.0f}")
-        st.metric("Viral", f"{st.session_state.viral:.0f}")
-        st.metric("Narrativa", f"{st.session_state.narrative:.0f}")
-    with col3:
-        st.markdown("### 📰 Diário da campanha")
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown("<div class='panel'><h4 style='margin-top:0'>Segmentos decisivos</h4>", unsafe_allow_html=True)
+        for seg, info in SEGMENTOS.items():
+            value = st.session_state.segments[seg]
+            st.markdown(
+                f"<div style='margin-bottom:10px'><div style='display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px'><span><strong>{info['nome']}</strong></span><span>{value:.1f}%</span></div><div style='background:#e5e7eb;border-radius:999px;height:10px;overflow:hidden'><div style='background:#8b5cf6;width:{max(1,value)}%;height:10px;border-radius:999px'></div></div></div>",
+                unsafe_allow_html=True,
+            )
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    with c2:
+        st.markdown("<div class='panel'><h4 style='margin-top:0'>Diário de campanha</h4>", unsafe_allow_html=True)
         if st.session_state.history:
-            for h in st.session_state.history[:10]:
-                st.write(f"• {h}")
+            for item in st.session_state.history[:8]:
+                st.write("•", item)
         else:
-            st.caption("Sem histórico ainda.")
-        if st.session_state.achievements:
-            st.markdown("### 🏅 Badges")
-            badges = "".join([f"<span class='achievement'>{ACHIEVEMENTS[a]}</span>" for a in st.session_state.achievements])
-            st.markdown(badges, unsafe_allow_html=True)
+            st.caption("Nenhum movimento registrado ainda.")
+        st.markdown("</div>", unsafe_allow_html=True)
+
+
+def render_results():
+    color_class = "success-strip" if st.session_state.victory else "warning-strip"
+    st.markdown(f"<div class='{color_class}'>{st.session_state.result_text}</div>", unsafe_allow_html=True)
+
+    final_standing = sorted(
+        [("Você", st.session_state.intent)] + [(v["nome"], v["voto"]) for v in st.session_state.rivals.values()],
+        key=lambda x: x[1],
+        reverse=True,
+    )
+    st.markdown("### 🗳️ Termômetro final")
+    for name, value in final_standing:
+        st.write(f"**{name}** — {value:.1f}%")
+
+    if st.session_state.victory:
+        govern_msg = "governo nasce com margem de manobra" if st.session_state.governabilidade >= 55 else "vitória veio, mas a governabilidade exigirá negociação pesada"
+        st.markdown(
+            f"<div class='gov-box'><h4 style='margin-top:0'>🏛️ Pós-vitória</h4><p style='margin-bottom:8px'>Sua governabilidade fechou em <strong>{st.session_state.governabilidade:.1f}</strong>. Isso significa que o {govern_msg}.</p><p style='margin:0'>Aliados: <strong>{st.session_state.allies:.1f}</strong> | Tempo de TV herdado: <strong>{st.session_state.time_tv:.1f}</strong> | Risco residual: <strong>{st.session_state.risk:.1f}</strong>%</p></div>",
+            unsafe_allow_html=True,
+        )
+
+    if st.button("🔁 Jogar novamente", use_container_width=True):
+        init_state(True)
+        st.rerun()
 
 
 def main():
-    if "seed" not in st.session_state:
-        init_state(reset_seed=True)
+    if "started" not in st.session_state:
+        init_state(True)
 
     sidebar_panel()
 
@@ -1103,21 +1567,31 @@ def main():
         return
 
     st.markdown(
-        f"<div class='hero'><h1>🇧🇷 {PARTIDOS[st.session_state.party]['nome']}</h1><p>Dia {st.session_state.day}/{st.session_state.total_days} • {PARTIDOS[st.session_state.party]['slogan']} • Assessor: {ASSESSORES[st.session_state.advisor]['nome']}</p></div>",
+        f"""
+        <div class='hero'>
+            <h1>🇧🇷 Corrida presidencial — Dia {st.session_state.day}</h1>
+            <p>{PARTIDOS[st.session_state.party]['nome']} • {ASSESSORES[st.session_state.advisor]['icone']} {ASSESSORES[st.session_state.advisor]['nome']} • narrativa em disputa</p>
+        </div>
+        """,
         unsafe_allow_html=True,
     )
 
     render_metric_cards()
     st.write("")
+
+    top_left, top_right = st.columns([1.35, 0.9])
+    with top_left:
+        if st.session_state.game_over:
+            render_results()
+        else:
+            render_event()
+    with top_right:
+        render_active_consequences()
+
+    st.write("")
     render_charts()
     st.write("")
-
-    if st.session_state.game_over:
-        render_results()
-    else:
-        render_event()
-        st.write("")
-        render_bottom_panels()
+    render_bottom_panels()
 
 
 if __name__ == "__main__":
