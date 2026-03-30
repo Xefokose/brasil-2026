@@ -1,6 +1,7 @@
 
 import math
 import random
+import copy
 from urllib.parse import quote
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
@@ -12,7 +13,7 @@ import streamlit as st
 # CONFIGURAÇÃO
 # =========================================================
 st.set_page_config(
-    page_title="🇧🇷 Candidato 2026: Brasil em Jogo V7",
+    page_title="🇧🇷 Candidato 2026: Brasil em Jogo V8",
     page_icon="🗳️",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -22,70 +23,77 @@ STYLE = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 :root{
-    --bg:#eef3ee;
+    --bg:#edf3ef;
     --panel:#ffffff;
-    --ink:#0d1b14;
-    --muted:#dbe7df;
-    --muted-dark:#4b6256;
+    --ink:#0c1b15;
+    --muted:#667c71;
     --green:#0b6b3a;
-    --green-2:#179b58;
-    --yellow:#ffcf33;
-    --yellow-2:#c99700;
-    --blue:#0f4ea8;
-    --blue-2:#0a2f6b;
-    --red:#c53a2f;
-    --shadow:0 14px 34px rgba(13,27,20,.10);
-    --shadow-strong:0 18px 42px rgba(10,78,163,.22);
-    --border:1px solid rgba(13,27,20,.08);
+    --green-strong:#084f2b;
+    --yellow:#f4c430;
+    --yellow-strong:#a67600;
+    --blue:#0d4fa8;
+    --blue-strong:#0a326e;
+    --red:#ba3a2f;
+    --red-strong:#84241d;
+    --shadow:0 12px 32px rgba(12,27,21,.09);
+    --shadow-strong:0 18px 42px rgba(13,79,168,.18);
+    --border:1px solid rgba(9,28,20,.08);
 }
-
 html, body, [class*="css"] { font-family: 'Inter', sans-serif; color:var(--ink); }
 body{background:var(--bg);}
-.main { background: radial-gradient(circle at top, #f8fbf6 0%, #eef4ef 55%, #edf2f8 100%); }
-.block-container { padding-top: 1.1rem; padding-bottom: 2rem; max-width: 1380px; }
-section[data-testid="stSidebar"]{background: linear-gradient(180deg, #0c5a39 0%, #083b59 100%);}
-section[data-testid="stSidebar"] *{ color:#f8fffb; }
-.hero{
-    background: linear-gradient(120deg, rgba(9,81,57,.98) 0%, rgba(15,95,61,.98) 36%, rgba(242,201,76,.97) 36.5%, rgba(242,201,76,.97) 54%, rgba(10,78,163,.98) 54.5%, rgba(23,61,122,.98) 100%);
-    color:white; border-radius:28px; padding:30px 30px 26px 30px; margin-bottom:18px;
-    box-shadow:var(--shadow-strong); position:relative; overflow:hidden;
-}
-.hero:before{content:""; position:absolute; inset:auto -40px -55px auto; width:220px; height:220px; border-radius:50%; background:rgba(255,255,255,.10);}
+.main { background: radial-gradient(circle at top, #f9fcf8 0%, #eef4ef 56%, #eef3f9 100%); }
+.block-container { padding-top: 1rem; padding-bottom: 2rem; max-width: 1380px; }
+section[data-testid="stSidebar"]{background:linear-gradient(180deg,#095836 0%,#0a4175 100%);}
+section[data-testid="stSidebar"] *{color:#f7fffa;}
+.hero{background: linear-gradient(120deg, rgba(8,79,43,.98) 0%, rgba(12,103,58,.98) 36%, rgba(243,195,45,.98) 36.5%, rgba(243,195,45,.98) 54%, rgba(14,79,168,.98) 54.5%, rgba(10,50,110,.98) 100%); color:white; border-radius:28px; padding:30px 30px 26px 30px; margin-bottom:18px; box-shadow:var(--shadow-strong); position:relative; overflow:hidden;}
+.hero:before{content:""; position:absolute; inset:auto -44px -60px auto; width:220px; height:220px; border-radius:50%; background:rgba(255,255,255,.10);}
 .hero h1{margin:0 0 6px 0; font-size:2.25rem; letter-spacing:-.02em;}
-.hero p{margin:0; opacity:.96; max-width:900px;}
+.hero p{margin:0; opacity:.96; max-width:920px;}
 .panel{background:linear-gradient(180deg,#ffffff 0%, #fbfdfb 100%); border-radius:20px; padding:18px; border:var(--border); box-shadow:var(--shadow);}
-.metric-card{background:linear-gradient(135deg, #0b6b3a 0%, #094d2a 100%); color:#ffffff; border-radius:20px; padding:16px; min-height:126px; box-shadow:var(--shadow-strong); border:1px solid rgba(255,255,255,.08); position:relative; overflow:hidden;}
-.metric-card:before{content:''; position:absolute; inset:auto -16px -18px auto; width:90px; height:90px; border-radius:50%; background:rgba(255,255,255,.08);}
-.metric-card.card-gold{background:linear-gradient(135deg,#b68600 0%,#7b5a00 100%);}
-.metric-card.card-blue{background:linear-gradient(135deg,#0f4ea8 0%,#0a2f6b 100%);}
-.metric-card.card-red{background:linear-gradient(135deg,#b3362c 0%,#7f1e17 100%);}
-.metric-card h4{margin:0; color:rgba(255,255,255,.82); font-size:11px; text-transform:uppercase; letter-spacing:.10em;}
-.metric-card h2{margin:8px 0 6px 0; font-size:29px; line-height:1.05; color:#ffffff; text-shadow:0 1px 2px rgba(0,0,0,.18);}
-.metric-card span{font-size:12px; color:rgba(255,255,255,.84);}
+.metric-card{color:#fff; border-radius:22px; padding:16px 16px 14px 16px; min-height:132px; box-shadow:var(--shadow-strong); border:1px solid rgba(255,255,255,.08); position:relative; overflow:hidden;}
+.metric-card::before{content:""; position:absolute; inset:auto -12px -12px auto; width:94px; height:94px; border-radius:50%; background:rgba(255,255,255,.09);}
+.metric-card.card-intent{background:linear-gradient(135deg,#0b6b3a 0%,#084f2b 100%);}
+.metric-card.card-reject{background:linear-gradient(135deg,#ba3a2f 0%,#84241d 100%);}
+.metric-card.card-cash{background:linear-gradient(135deg,#b88400 0%,#7a5600 100%);}
+.metric-card.card-media{background:linear-gradient(135deg,#0d4fa8 0%,#0a326e 100%);}
+.metric-card.card-risk{background:linear-gradient(135deg,#6f1d67 0%,#43113d 100%);}
+.metric-card.card-energy{background:linear-gradient(135deg,#006f74 0%,#06484b 100%);}
+.metric-card h4{margin:0; color:rgba(255,255,255,.86); font-size:11px; text-transform:uppercase; letter-spacing:.11em;}
+.metric-card h2{margin:8px 0 6px 0; font-size:29px; line-height:1.04; color:#ffffff; text-shadow:0 1px 2px rgba(0,0,0,.22);}
+.metric-card span{font-size:12px; color:rgba(255,255,255,.90);}
 .event-box{background:linear-gradient(180deg,#ffffff 0%,#fbfdfb 100%); border-left:10px solid var(--blue); border-radius:24px; padding:24px; margin-bottom:18px; box-shadow:var(--shadow); border:var(--border);}
 .event-crisis{border-left-color:var(--red);}
-.event-good{border-left-color:var(--green-2);}
-.event-followup{border-left-color:var(--yellow-2);}
+.event-good{border-left-color:var(--green);}
+.event-followup{border-left-color:var(--yellow-strong);}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;background:#edf4ff;color:#093f8b;font-size:12px;font-weight:800;margin-bottom:10px;border:1px solid #cfe0ff;}
 .choice-box{background:#fff; border:1px solid rgba(16,34,25,.10); border-radius:18px; padding:16px; box-shadow:0 8px 20px rgba(16,34,25,.05); margin-bottom:12px;}
 .choice-title{font-weight:800; color:var(--ink); margin-bottom:6px; font-size:1rem;}
-.small-muted{color:var(--muted); font-size:13px;}
+.small-muted{color:var(--muted); font-size:13px; line-height:1.45;}
 .tag{display:inline-block; padding:6px 11px; border-radius:999px; font-size:11px; font-weight:800; margin-right:6px; margin-top:8px; border:1px solid transparent;}
 .tag-blue{background:#e6f0ff;color:#0c4ca0;border-color:#bdd5ff;}
 .tag-red{background:#fff0ef;color:#a52b23;border-color:#f1c4bf;}
 .tag-green{background:#eaf8f1;color:#0f6f42;border-color:#bfe7cf;}
 .tag-purple{background:#fff7db;color:#8a5b00;border-color:#f1dfa1;}
 .effect-chip{display:inline-flex; align-items:center; gap:6px; padding:7px 10px; border-radius:999px; font-size:12px; font-weight:800; margin:4px 6px 0 0; background:#eef4ef; color:var(--ink); border:1px solid rgba(16,34,25,.07);}
-.consequence-card{background:linear-gradient(180deg,#fff9e8 0%,#fffdf3 100%); border:1px solid #efd889; border-radius:18px; padding:14px; margin-bottom:10px;}
+.effect-chip.positive{background:#ebf8f0;color:#0d6f41;border-color:#c0e6ce;}
+.effect-chip.negative{background:#fff1ef;color:#a32a22;border-color:#f0c9c4;}
+.effect-chip.neutral{background:#eef4ff;color:#10448d;border-color:#d5e3ff;}
+.consequence-card{color:#102118; border-radius:18px; padding:15px 16px; margin-bottom:10px; border:1px solid transparent; box-shadow:0 8px 18px rgba(14,27,20,.06);}
+.consequence-card.good{background:linear-gradient(180deg,#ebfaf1 0%,#f8fff9 100%); border-color:#bfe8d0;}
+.consequence-card.warning{background:linear-gradient(180deg,#fff8df 0%,#fffdf4 100%); border-color:#eed36d;}
+.consequence-card.danger{background:linear-gradient(180deg,#fff0ee 0%,#fff9f8 100%); border-color:#ebb2ac;}
+.consequence-card .cons-title{font-weight:800; font-size:14px; color:#102118;}
+.consequence-card .cons-desc{font-size:13px; color:#344840; line-height:1.45; margin:6px 0;}
+.consequence-card .cons-meta{display:inline-flex;gap:8px;align-items:center;padding:5px 9px;border-radius:999px;background:rgba(16,33,24,.07);font-size:11px;font-weight:800;color:#20372e;}
 .achievement{display:inline-block; padding:8px 12px; border-radius:999px; margin:4px; background:linear-gradient(135deg,#0c5a39 0%, #0a4ea3 100%); color:white; font-size:12px; font-weight:800;}
 .region-row{margin-bottom:10px;}
 .success-strip{background:linear-gradient(135deg,#0d6b41 0%,#18a05d 100%); color:white; padding:15px 18px; border-radius:16px; font-weight:700; box-shadow:var(--shadow);}
 .warning-strip{background:linear-gradient(135deg,#b53328 0%,#df5144 100%); color:white; padding:15px 18px; border-radius:16px; font-weight:700; box-shadow:var(--shadow);}
 .transition-strip{background:linear-gradient(135deg,#0a4ea3 0%,#173d7a 100%); color:white; padding:15px 18px; border-radius:16px; font-weight:700; box-shadow:var(--shadow);}
 .share-card{background:linear-gradient(135deg,#ffffff 0%,#f7fbf8 100%); border:1px solid rgba(13,27,20,.08); border-radius:20px; padding:18px; box-shadow:var(--shadow);}
-.share-stat{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px dashed rgba(13,27,20,.10);font-size:14px;}
-.share-stat:last-child{border-bottom:0;}
-.share-badge{display:inline-block;padding:8px 12px;border-radius:999px;background:linear-gradient(135deg,#0b6b3a 0%,#0f4ea8 100%);color:#fff;font-weight:800;font-size:12px;margin:3px 6px 3px 0;}
+.share-mini{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:#eef4ef;border:1px solid rgba(13,27,20,.08);font-size:12px;font-weight:800;margin:4px 6px 4px 0;}
 .share-box{background:#0d1b14;color:#f8fff9;border-radius:18px;padding:16px;white-space:pre-wrap;font-size:14px;line-height:1.5;}
+.share-preview{background:#fff;border-radius:22px;border:1px solid rgba(13,27,20,.08);box-shadow:var(--shadow);padding:14px;}
 .stButton>button{border-radius:14px !important; font-weight:800 !important; border:0 !important; padding:.7rem 1rem !important; background:linear-gradient(135deg,#0f5f3d 0%,#0a4ea3 100%) !important; color:white !important; box-shadow:0 10px 22px rgba(10,78,163,.20) !important;}
 .stButton>button:hover{transform:translateY(-1px); filter:saturate(1.05);}
 .stSelectbox label, .stNumberInput label{font-weight:700 !important; color:var(--ink) !important;}
@@ -202,6 +210,8 @@ class Option:
     risky: bool = False
     requirement: Optional[Dict[str, float]] = None
     consequences: List[Consequence] = field(default_factory=list)
+    energy_relief: float = 0.0
+    cash_relief: float = 0.0
 
 
 @dataclass
@@ -256,6 +266,60 @@ def phase_matches(card_phase: str, current: str) -> bool:
 
 def chip(text: str) -> str:
     return f"<span class='effect-chip'>{text}</span>"
+
+
+EVENT_OPENERS = {
+    "midia": ["Plantão de campanha", "No radar nacional", "A lente virou para você", "Em horário nobre", "No centro da narrativa"],
+    "politica": ["Bastidor em ebulição", "Telefone quente", "O tabuleiro mexeu", "Pressão de gabinete", "A articulação apertou"],
+    "financas": ["Conta na mesa", "Planilha aberta", "A operação cobrou", "No caixa e no cronograma", "A campanha pede combustível"],
+    "energia": ["Fôlego em cheque", "O corpo respondeu", "Agenda no limite", "Ritmo de maratona", "O cansaço bateu na porta"],
+    "digital": ["O feed incendiou", "Na guerra dos cortes", "O algoritmo sentiu", "Timeline em ebulição", "Nas trincheiras do celular"],
+    "juridico": ["Sinal amarelo no TSE", "Na mira do regulamento", "Um passo em falso custa caro", "A caneta está por perto", "O jurídico entrou no campo"],
+    "pesquisa": ["Novo retrato da disputa", "O humor do eleitor mudou", "Saiu a fotografia da semana", "Pesquisa na rua", "Os números falaram"],
+    "all": ["O dia virou", "Nova frente de batalha", "A campanha respirou fundo", "Um movimento abriu outra janela", "A próxima jogada chegou"],
+}
+
+DECISION_PROMPTS = [
+    "Qual leitura você faz disso?",
+    "Como você responde sem entregar o jogo?",
+    "Qual vai ser seu movimento agora?",
+    "Qual tom a campanha vai escolher?",
+    "Onde você quer bater ou segurar?",
+    "Que resposta você coloca na rua?",
+]
+
+
+def event_opening_line(event):
+    rng = random.Random(f"{st.session_state.seed}:{st.session_state.day}:{event.id}:open")
+    bucket = EVENT_OPENERS.get(event.category, EVENT_OPENERS["all"])
+    return rng.choice(bucket)
+
+
+def decision_prompt_line(event):
+    rng = random.Random(f"{st.session_state.seed}:{st.session_state.day}:{event.id}:prompt")
+    return rng.choice(DECISION_PROMPTS)
+
+
+def materialize_event(event):
+    clone = copy.deepcopy(event)
+    rng = random.Random(f"{st.session_state.seed}:{st.session_state.day}:{event.id}:opts")
+    rng.shuffle(clone.options)
+    return clone
+
+
+def effect_chip(label, val, money=False):
+    if money:
+        txt = fmt_money(val)
+        signal = "+" if val >= 0 else ""
+        klass = "positive" if val > 0 else "negative" if val < 0 else "neutral"
+        return f"<span class='effect-chip {klass}'>{label} {signal}{txt}</span>"
+    signal = "+" if val >= 0 else ""
+    klass = "positive" if val > 0 else "negative" if val < 0 else "neutral"
+    return f"<span class='effect-chip {klass}'>{label} {signal}{val:.1f}</span>"
+
+
+def consequence_class(severity: str) -> str:
+    return severity if severity in {"good", "warning", "danger"} else "warning"
 
 
 def apply_delta_to_map(map_obj: Dict[str, float], key: str, amount: float, high: float = 100.0):
@@ -406,7 +470,7 @@ def ev(eid, title, desc, category, tone, phase, tags, options, followup_only=Fal
     )
 
 
-def op(text, summary, effects, risky=False, requirement=None, consequences=None):
+def op(text, summary, effects, risky=False, requirement=None, consequences=None, energy_relief=0.0, cash_relief=0.0):
     return Option(
         text=text,
         summary=summary,
@@ -414,6 +478,8 @@ def op(text, summary, effects, risky=False, requirement=None, consequences=None)
         risky=risky,
         requirement=requirement,
         consequences=consequences or [],
+        energy_relief=energy_relief,
+        cash_relief=cash_relief,
     )
 
 
@@ -432,7 +498,7 @@ def build_events() -> List[EventCard]:
                    {"intent": 2.5, "media": 6, "energy": -10, "credibility": 2, "viral": 6, "rejection": 0.7}),
                 op("Ser didático, calmo e presidencial", "Você pareceu seguro. Não explodiu, mas deixou menos munição para adversários.",
                    {"intent": 1.8, "media": 4, "energy": -8, "credibility": 4, "rejection": -0.6, "momentum": 1},
-                   consequences=[cons_organic_wave(2)]),
+                   consequences=[cons_organic_wave(2)], energy_relief=0.18),
                 op("Improvisar frases de efeito e atacar todo mundo", "Você pode viralizar ou parecer descontrolado. Foi um lance de alto risco.",
                    {"intent": 3.0, "media": 8, "energy": -12, "viral": 10, "risk": 5, "rejection": 2.2},
                    risky=True, consequences=[cons_media_negative(), cons_rejection_echo()]),
@@ -478,7 +544,7 @@ def build_events() -> List[EventCard]:
             [
                 op("Divulgar o áudio completo e contextualizar", "Você estancou parte do dano e recuperou controle do assunto.",
                    {"credibility": 3, "media": 2, "viral": 3, "risk": -1, "energy": -5},
-                   consequences=[cons_organic_wave(2)]),
+                   consequences=[cons_organic_wave(2)], energy_relief=0.18),
                 op("Processar, notificar e remover conteúdo", "É o caminho mais institucional, mas o meme continua vivo por algumas horas.",
                    {"risk": -2, "credibility": 2, "cash": -12000, "energy": -4},
                    requirement={"cash": 15000}),
@@ -495,7 +561,7 @@ def build_events() -> List[EventCard]:
             [
                 op("Mudar mensagem e concentrar fogo em indecisos", "Você corrigiu a rota em vez de fingir que nada aconteceu.",
                    {"intent": 2.0, "media": 2, "cash": -8000, "energy": -5, "momentum": 1},
-                   consequences=[cons_organic_wave(2)]),
+                   consequences=[cons_organic_wave(2)], energy_relief=0.18),
                 op("Desqualificar a pesquisa e falar com a base", "Seu eleitor fiel comprou. O resto achou chororô.",
                    {"viral": 4, "intent": 0.5, "credibility": -3, "rejection": 1.2}),
                 op("Fazer caravana emergencial em estados-chave", "Você sobe com território, mas paga em caixa e energia.",
@@ -542,7 +608,7 @@ def build_events() -> List[EventCard]:
             [
                 op("Retirar a peça, pedir auditoria e responder tecnicamente", "Você cortou a hemorragia e ficou menos vulnerável.",
                    {"risk": -6, "credibility": 3, "cash": -6000, "energy": -3},
-                   consequences=[cons_small_recovery()]),
+                   consequences=[cons_small_recovery()], energy_relief=0.28),
                 op("Dobrar a aposta e chamar de censura", "Pode animar militância, mas abriu flanco sério.",
                    {"viral": 6, "intent": 1.0, "risk": 9, "credibility": -3, "rejection": 1.4},
                    risky=True, consequences=[cons_tse_pressure()]),
@@ -559,7 +625,7 @@ def build_events() -> List[EventCard]:
             [
                 op("Aceitar dentro da lei, com transparência total", "O caixa respirou e você não precisou entrar em gambiarra.",
                    {"cash": 45000, "credibility": 1, "media": 1, "empreendedores": 2},
-                   consequences=[cons_cash_breath()]),
+                   consequences=[cons_cash_breath()], cash_relief=0.20),
                 op("Recusar e focar em microdoação", "Você reforçou a imagem de autonomia, mas o dinheiro entra mais devagar.",
                    {"credibility": 4, "viral": 3, "cash": 10000, "intent": 1.0}),
                 op("Criar arranjo informal e torcer para não aparecer", "Nem pensar. Isso pode até aliviar o caixa, mas a bomba vem.",
@@ -604,7 +670,7 @@ def build_events() -> List[EventCard]:
             [
                 op("Falar em união e viabilidade com humildade", "Você captou parte do voto útil sem parecer desesperado.",
                    {"intent": 2.8, "credibility": 3, "media": 2, "rejection": -0.6},
-                   consequences=[cons_organic_wave(2)]),
+                   consequences=[cons_organic_wave(2)], energy_relief=0.18),
                 op("Dobrar o tom e dizer que só você pode vencer", "Pode trazer impulso, mas a linha é fina entre força e desespero.",
                    {"intent": 2.0, "viral": 4, "rejection": 1.2, "credibility": -1}),
                 op("Ignorar a conversa e repetir jingle", "Você deixou uma janela estratégica aberta.",
@@ -635,7 +701,7 @@ def build_events() -> List[EventCard]:
             [
                 op("Cortar eventos caros e priorizar digital", "Você estabilizou o caixa e ganhou eficiência.",
                    {"cash": 22000, "viral": 4, "media": 1, "intent": 0.8},
-                   consequences=[cons_cash_breath(2)]),
+                   consequences=[cons_cash_breath(2)], cash_relief=0.18),
                 op("Fazer jantar de arrecadação e ligar para doadores", "Resolve bem o caixa, mas te prende com gente poderosa.",
                    {"cash": 38000, "allies": 2, "credibility": -1, "energy": -3}),
                 op("Manter tudo igual e confiar que entra depois", "Isso raramente termina bonito.",
@@ -870,7 +936,7 @@ def build_events() -> List[EventCard]:
             [
                 op("Assumir, repousar e retomar com disciplina", "Você humanizou o erro e cortou a espiral.",
                    {"energy": 8, "credibility": 2, "intent": 0.5, "media": 1},
-                   consequences=[cons_small_recovery()]),
+                   consequences=[cons_small_recovery()], energy_relief=0.28),
                 op("Fingir normalidade e seguir no limite", "A campanha parece em piloto cego.",
                    {"energy": -6, "credibility": -2, "rejection": 0.8},
                    risky=True),
@@ -1120,10 +1186,11 @@ def available_events() -> List[EventCard]:
 def generate_event():
     if st.session_state.followup_queue:
         next_id = st.session_state.followup_queue.pop(0)
-        for e in EVENTS:
-            if e.id == next_id:
-                st.session_state.event = e
-                return
+        if next_id not in st.session_state.used_events:
+            for e in EVENTS:
+                if e.id == next_id:
+                    st.session_state.event = materialize_event(e)
+                    return
     pool = available_events()
     weights = []
     for e in pool:
@@ -1140,8 +1207,11 @@ def generate_event():
             w += 0.6
         if e.category == "pesquisa" and st.session_state.day > 18:
             w += 0.4
+        if e.category == "midia" and st.session_state.day > 12:
+            w += 0.25
         weights.append(w)
-    st.session_state.event = random.choices(pool, weights=weights, k=1)[0]
+    selected = random.choices(pool, weights=weights, k=1)[0]
+    st.session_state.event = materialize_event(selected)
 
 
 def apply_effects(effects: Dict[str, float], risky: bool = False):
@@ -1247,55 +1317,66 @@ def rival_turn():
         rival["rejeicao"] = clamp(rival["rejeicao"] + random.uniform(-0.5, 0.7), 10, 60)
 
 
-def daily_cost_model():
+def daily_cost_model(option: Optional[Option] = None):
     s = st.session_state
-    # custo base cresce com a proximidade da eleição, mídia e estrutura
-    phase_factor = 1.0 + (s.day / s.total_days) * 0.55
-    operation = 3600 + (s.time_tv * 30) + (s.allies * 18) + (s.media * 14)
-    burn = operation * 0.19 * phase_factor
+    option = option or Option(text="", summary="", effects={})
+    phase_factor = 1.0 + (s.day / s.total_days) * 0.52
+    operation = 3300 + (s.time_tv * 28) + (s.allies * 16) + (s.media * 12)
+    burn = operation * 0.18 * phase_factor
+    burn *= (1 - min(0.18, option.cash_relief))
+    if option.effects.get("cash", 0) > 0:
+        burn *= 0.92
+    if option.effects.get("cash", 0) < 0:
+        burn *= 1.03
     if s.difficulty == "Difícil":
         burn *= 1.08
     elif s.difficulty == "Hardcore":
-        burn *= 1.16
+        burn *= 1.15
     s.cash = max(0.0, s.cash - burn)
 
-    # energia: sobe e desce conforme qualidade da gestão
-    energy_drop = 1.55 + (s.media / 110) + (s.day / s.total_days) * 1.15
+    energy_drop = 1.35 + (s.media / 125) + (s.day / s.total_days) * 1.05
+    energy_drop *= (1 - min(0.35, option.energy_relief))
+    if option.effects.get("energy", 0) > 0:
+        energy_drop -= 0.65
+    if option.effects.get("energy", 0) >= 4:
+        energy_drop -= 0.55
+    if option.effects.get("energy", 0) <= -5:
+        energy_drop += 0.35
     if s.energy < 42:
-        energy_drop -= 0.45
+        energy_drop -= 0.42
     if s.allies > 55:
-        energy_drop -= 0.18
+        energy_drop -= 0.16
     if s.cash > 140000:
-        energy_drop -= 0.12
+        energy_drop -= 0.10
+    if getattr(st.session_state.event, "category", "") == "energia":
+        energy_drop -= 0.20
+    energy_drop = max(0.15, energy_drop)
     s.energy = clamp(s.energy - energy_drop, 0, 100)
 
-    # mídia, risco e intenção oscilam com momentum e credibilidade
-    s.media = clamp(s.media + random.uniform(-1.6, 1.8) + s.momentum * 0.08, 0, 100)
-    s.risk = clamp(s.risk + random.uniform(-0.6, 1.4) - s.credibility * 0.008, 0, 100)
+    s.media = clamp(s.media + random.uniform(-1.5, 1.6) + s.momentum * 0.08, 0, 100)
+    s.risk = clamp(s.risk + random.uniform(-0.55, 1.2) - s.credibility * 0.008, 0, 100)
 
     region_avg = sum(s.regions.values()) / len(s.regions)
     seg_avg = sum(s.segments.values()) / len(s.segments)
     trend = (
-        (region_avg - 24) * 0.025
-        + (seg_avg - 24) * 0.020
-        + (s.media - 45) * 0.018
+        (region_avg - 24) * 0.024
+        + (seg_avg - 24) * 0.019
+        + (s.media - 45) * 0.017
         + (s.credibility - s.rejection) * 0.010
-        + s.momentum * 0.09
-        - max(0, s.risk - 35) * 0.045
+        + s.momentum * 0.085
+        - max(0, s.risk - 35) * 0.043
     )
     if s.day >= 36:
-        trend += (s.viral - 18) * 0.012  # voto útil / reta final
-    s.intent = clamp(s.intent + trend + random.uniform(-0.5, 0.7), 3, 60)
+        trend += (s.viral - 18) * 0.012
+    s.intent = clamp(s.intent + trend + random.uniform(-0.45, 0.62), 3, 60)
 
-    # rejeição tende a subir um pouco com exposição
     exposure = (s.media + s.viral) / 120
-    s.rejection = clamp(s.rejection + random.uniform(-0.4, 0.5) + exposure * 0.18 - s.credibility * 0.004, 4, 80)
+    s.rejection = clamp(s.rejection + random.uniform(-0.36, 0.45) + exposure * 0.18 - s.credibility * 0.004, 4, 80)
 
-    # pequeno ganho de caixa se campanha estiver muito bem organizada
     if s.cash < 65000 and s.credibility > 54 and s.risk < 30:
-        s.cash += 6500
+        s.cash += 6000
     if s.energy < 24 and s.credibility > 45:
-        s.energy = clamp(s.energy + 0.8, 0, 100)
+        s.energy = clamp(s.energy + 1.0, 0, 100)
 
 
 def unlock_achievements():
@@ -1429,7 +1510,7 @@ def next_day(option: Option):
 
     notes.extend(process_consequences())
     rival_turn()
-    daily_cost_model()
+    daily_cost_model(option)
     unlock_achievements()
 
     st.session_state.used_events.append(st.session_state.event.id)
@@ -1507,19 +1588,16 @@ def readiness_score():
 def render_metric_cards():
     c1, c2, c3, c4, c5, c6 = st.columns(6)
     cards = [
-        (c1, "INTENÇÃO", f"{st.session_state.intent:.1f}%", "Pesquisa do dia", ""),
-        (c2, "REJEIÇÃO", f"{st.session_state.rejection:.1f}%", "Quanto menor, melhor", "card-red"),
-        (c3, "CAIXA", fmt_money(st.session_state.cash), "Operação viva", "card-gold"),
-        (c4, "MÍDIA", f"{st.session_state.media:.0f}", "TV, rádio e corte", "card-blue"),
-        (c5, "RISCO", f"{st.session_state.risk:.0f}%", "Jurídico e crise", "card-red"),
-        (c6, "ENERGIA", f"{st.session_state.energy:.0f}%", "Fôlego real", "card-gold"),
+        (c1, "INTENÇÃO", f"{st.session_state.intent:.1f}%", "Pesquisa do dia", "card-intent"),
+        (c2, "REJEIÇÃO", f"{st.session_state.rejection:.1f}%", "Quanto menor, melhor", "card-reject"),
+        (c3, "CAIXA", fmt_money(st.session_state.cash), "Operação viva", "card-cash"),
+        (c4, "MÍDIA", f"{st.session_state.media:.0f}", "TV, rádio e corte", "card-media"),
+        (c5, "RISCO", f"{st.session_state.risk:.0f}%", "Jurídico e crise", "card-risk"),
+        (c6, "ENERGIA", f"{st.session_state.energy:.0f}%", "Fôlego real", "card-energy"),
     ]
     for col, title, value, desc, klass in cards:
         with col:
-            st.markdown(
-                f"<div class='metric-card {klass}'><h4>{title}</h4><h2>{value}</h2><span>{desc}</span></div>",
-                unsafe_allow_html=True
-            )
+            st.markdown(f"<div class='metric-card {klass}'><h4>{title}</h4><h2>{value}</h2><span>{desc}</span></div>", unsafe_allow_html=True)
 
 
 def sidebar_panel():
@@ -1610,7 +1688,10 @@ def render_charts():
 def render_event():
     event = st.session_state.event
     tone_class = "event-crisis" if event.tone == "crisis" else "event-good" if event.tone == "good" else "event-followup" if event.followup_only else ""
+    opening = event_opening_line(event)
+    prompt = decision_prompt_line(event)
     st.markdown(f"<div class='event-box {tone_class}'>", unsafe_allow_html=True)
+    st.markdown(f"<div class='eyebrow'>🇧🇷 {opening}</div>", unsafe_allow_html=True)
     st.markdown(f"### {event.title}")
     st.write(event.desc)
     for tag in event.tags[:4]:
@@ -1618,33 +1699,33 @@ def render_event():
         st.markdown(f"<span class='tag {cls}'>{tag}</span>", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
-    st.markdown("#### Escolha sua resposta")
+    st.markdown(f"#### {prompt}")
     for idx, option in enumerate(event.options, start=1):
         enabled = req_ok(option.requirement)
         with st.container():
             st.markdown("<div class='choice-box'>", unsafe_allow_html=True)
             st.markdown(f"<div class='choice-title'>{idx}. {option.text}</div>", unsafe_allow_html=True)
             st.markdown(f"<div class='small-muted'>{option.summary}</div>", unsafe_allow_html=True)
-
             chips = []
             eff = option.effects
-            if "intent" in eff: chips.append(chip(f"Intenção {'+' if eff['intent']>=0 else ''}{eff['intent']:.1f}"))
-            if "rejection" in eff: chips.append(chip(f"Rejeição {'+' if eff['rejection']>=0 else ''}{eff['rejection']:.1f}"))
-            if "credibility" in eff: chips.append(chip(f"Credibilidade {'+' if eff['credibility']>=0 else ''}{eff['credibility']:.1f}"))
-            if "cash" in eff: chips.append(chip(f"Caixa {'+' if eff['cash']>=0 else ''}{fmt_money(eff['cash'])}"))
-            if "energy" in eff: chips.append(chip(f"Energia {'+' if eff['energy']>=0 else ''}{eff['energy']:.1f}"))
-            if "risk" in eff: chips.append(chip(f"Risco {'+' if eff['risk']>=0 else ''}{eff['risk']:.1f}"))
-            if "media" in eff: chips.append(chip(f"Mídia {'+' if eff['media']>=0 else ''}{eff['media']:.1f}"))
-            if "viral" in eff: chips.append(chip(f"Viral {'+' if eff['viral']>=0 else ''}{eff['viral']:.1f}"))
+            if "intent" in eff: chips.append(effect_chip("Intenção", eff["intent"]))
+            if "rejection" in eff: chips.append(effect_chip("Rejeição", eff["rejection"]))
+            if "credibility" in eff: chips.append(effect_chip("Credibilidade", eff["credibility"]))
+            if "cash" in eff: chips.append(effect_chip("Caixa", eff["cash"], money=True))
+            if "energy" in eff: chips.append(effect_chip("Energia", eff["energy"]))
+            if "risk" in eff: chips.append(effect_chip("Risco", eff["risk"]))
+            if "media" in eff: chips.append(effect_chip("Mídia", eff["media"]))
+            if "viral" in eff: chips.append(effect_chip("Viral", eff["viral"]))
+            if option.energy_relief > 0: chips.append("<span class='effect-chip positive'>Pulmão preservado</span>")
+            if option.cash_relief > 0: chips.append("<span class='effect-chip positive'>Operação enxuta</span>")
             if chips:
                 st.markdown("".join(chips), unsafe_allow_html=True)
             if option.consequences:
                 st.caption("Essa escolha pode abrir consequências persistentes.")
-            btn_label = "Escolher"
             if not enabled and option.requirement:
                 reqs = ", ".join([f"{k} ≥ {v}" for k, v in option.requirement.items()])
                 st.caption(f"Requer: {reqs}")
-            if st.button(btn_label, key=f"opt_{st.session_state.day}_{event.id}_{idx}", disabled=not enabled, use_container_width=True):
+            if st.button("Escolher", key=f"opt_{st.session_state.day}_{event.id}_{idx}", disabled=not enabled, use_container_width=True):
                 next_day(option)
                 st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
@@ -1656,10 +1737,8 @@ def render_feedback_and_consequences():
     if st.session_state.active_consequences:
         st.markdown("#### Consequências ativas")
         for cons in st.session_state.active_consequences:
-            st.markdown(
-                f"<div class='consequence-card'><strong>{cons['title']}</strong><br><span class='small-muted'>{cons['desc']}</span><br><span class='small-muted'>Dias restantes: {cons['days_left']}</span></div>",
-                unsafe_allow_html=True,
-            )
+            css = consequence_class(cons["severity"])
+            st.markdown(f"<div class='consequence-card {css}'><div class='cons-title'>{cons['title']}</div><div class='cons-desc'>{cons['desc']}</div><span class='cons-meta'>Dias restantes: {cons['days_left']}</span></div>", unsafe_allow_html=True)
 
 
 def render_history():
@@ -1676,8 +1755,8 @@ def render_start_screen():
     st.markdown(
         f"""
         <div class="hero">
-            <h1>🇧🇷 Candidato 2026: Brasil em Jogo V7</h1>
-            <p>45 turnos, contraste Brasil reforçado, consequências persistentes, equilíbrio melhor de energia/caixa, mais de 50 eventos únicos e tela final para compartilhar.</p>
+            <h1>🇧🇷 Candidato 2026: Brasil em Jogo V8</h1>
+            <p>45 turnos, eventos únicos sem repetição, aberturas mais originais, contraste Brasil reforçado, energia e caixa mais equilibrados e card final para viralizar.</p>
         </div>
         """,
         unsafe_allow_html=True,
@@ -1694,7 +1773,7 @@ def render_start_screen():
         difficulty = st.selectbox("Dificuldade", options=["Fácil", "Normal", "Difícil", "Hardcore"], index=1)
         seed = st.number_input("Seed da campanha", min_value=1, max_value=999999, value=2026, step=1)
 
-    st.markdown("### O que muda nesta V6")
+    st.markdown("### O que muda nesta V8")
     st.markdown(
         "- Mais de **50 eventos únicos** na rotação normal.\n"
         "- **45 turnos sem repetição** do mesmo evento.\n"
@@ -1714,59 +1793,78 @@ def render_start_screen():
 
 def build_share_payload():
     s = st.session_state
-    outcome = "Venci" if s.victory else "Quase cheguei lá"
+    outcome = "Eu virei presidente" if s.victory else "Minha campanha caiu na reta final"
     turno = "1º turno" if s.first_turn and s.victory else "2º turno" if s.victory else f"dia {s.day}"
     score = int(max(0, (s.intent * 1.8) + (100 - s.rejection) + (s.credibility * 0.7) + (s.energy * 0.5) + (min(s.cash, 200000)/4000) - (s.scandals * 8) - (s.risk * 0.6)))
-    summary = (
-        f"🇧🇷 Joguei Candidato 2026 e {outcome}!\n"
-        f"• Resultado: {turno}\n"
-        f"• Intenção final: {s.intent:.1f}%\n"
-        f"• Rejeição final: {s.rejection:.1f}%\n"
-        f"• Caixa final: {fmt_money(s.cash)}\n"
-        f"• Energia final: {s.energy:.0f}%\n"
-        f"• Escândalos: {s.scandals}\n"
-        f"• Score de campanha: {score}\n"
-        f"#Candidato2026 #BrasilEmJogo"
-    )
+    short_text = f"🇧🇷 Joguei Candidato 2026: {outcome}. Resultado: {turno}. Score {score}. #Candidato2026 #BrasilEmJogo"
     urls = {
-        "whatsapp": f"https://wa.me/?text={quote(summary)}",
-        "telegram": f"https://t.me/share/url?url=&text={quote(summary)}",
-        "x": f"https://twitter.com/intent/tweet?text={quote(summary)}",
-        "facebook": f"https://www.facebook.com/sharer/sharer.php?u=https://example.com&quote={quote(summary)}",
+        "whatsapp": f"https://wa.me/?text={quote(short_text)}",
+        "telegram": f"https://t.me/share/url?url=&text={quote(short_text)}",
+        "x": f"https://twitter.com/intent/tweet?text={quote(short_text)}",
     }
-    stats = [
-        ("Intenção final", f"{s.intent:.1f}%"),
-        ("Rejeição final", f"{s.rejection:.1f}%"),
-        ("Credibilidade", f"{s.credibility:.0f}"),
-        ("Caixa restante", fmt_money(s.cash)),
-        ("Energia restante", f"{s.energy:.0f}%"),
-        ("Mídia", f"{s.media:.0f}"),
-        ("Risco jurídico", f"{s.risk:.0f}%"),
-        ("Escândalos", str(s.scandals)),
-        ("Combo máximo", f"x{s.max_combo}"),
-    ]
-    return summary, urls, stats, score
+    badges = [("Resultado", "Vitória" if s.victory else "Derrota"), ("Turno", turno), ("Score", str(score))]
+    return short_text, urls, badges, score
+
+
+def build_share_card_svg():
+    s = st.session_state
+    _, _, _, score = build_share_payload()
+    outcome = "PRESIDENTE ELEITO" if s.victory else "CAMPANHA ÉPICA"
+    sub = "Vitória no 1º turno" if s.first_turn and s.victory else "Vitória no 2º turno" if s.victory else "Quase cheguei lá"
+    score_label = f"Score {score}"
+    line2 = f"Intenção {s.intent:.1f}% • Rejeição {s.rejection:.1f}%"
+    line3 = f"{PARTIES[s.party]['nome']} • Dia final {s.day if s.day <= s.total_days else s.total_days}"
+    svg = f'''<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675">
+    <defs>
+      <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#084f2b"/>
+        <stop offset="38%" stop-color="#0b6b3a"/>
+        <stop offset="38.5%" stop-color="#f3c32d"/>
+        <stop offset="58%" stop-color="#f3c32d"/>
+        <stop offset="58.5%" stop-color="#0d4fa8"/>
+        <stop offset="100%" stop-color="#0a326e"/>
+      </linearGradient>
+      <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="0" dy="16" stdDeviation="16" flood-color="#07140f" flood-opacity="0.25"/>
+      </filter>
+    </defs>
+    <rect width="1200" height="675" fill="url(#bg)"/>
+    <circle cx="1080" cy="620" r="180" fill="rgba(255,255,255,0.10)"/>
+    <rect x="58" y="58" rx="30" ry="30" width="1084" height="559" fill="rgba(255,255,255,0.11)" stroke="rgba(255,255,255,0.18)" filter="url(#shadow)"/>
+    <text x="90" y="128" font-family="Inter, Arial" font-size="30" font-weight="700" fill="#F8FFF9">🇧🇷 CANDIDATO 2026</text>
+    <text x="90" y="218" font-family="Inter, Arial" font-size="68" font-weight="800" fill="#FFFFFF">{outcome}</text>
+    <text x="90" y="272" font-family="Inter, Arial" font-size="28" font-weight="700" fill="#EAF4FF">{sub}</text>
+    <rect x="90" y="314" rx="18" ry="18" width="240" height="72" fill="#0d1b14" fill-opacity="0.42"/>
+    <text x="114" y="360" font-family="Inter, Arial" font-size="34" font-weight="800" fill="#FFFFFF">{score_label}</text>
+    <text x="90" y="452" font-family="Inter, Arial" font-size="30" font-weight="700" fill="#FFFFFF">{line2}</text>
+    <text x="90" y="500" font-family="Inter, Arial" font-size="24" font-weight="600" fill="#F8FFF9">{line3}</text>
+    <text x="90" y="582" font-family="Inter, Arial" font-size="20" font-weight="600" fill="#F8FFF9">Jogue, compartilhe e tente chegar ao Planalto.</text>
+    </svg>'''
+    return svg.encode("utf-8")
 
 
 def render_share_panel():
-    summary, urls, stats, score = build_share_payload()
-    st.markdown("### 📣 Sua tela de compartilhamento")
-    left, right = st.columns([1.05, 1])
+    summary, urls, badges, score = build_share_payload()
+    svg_bytes = build_share_card_svg()
+    st.markdown("### 📣 Compartilhe sua campanha")
+    left, right = st.columns([1.15, 0.85])
     with left:
-        st.markdown("<div class='share-card'><h4 style='margin-top:0'>Resumo da campanha</h4>" + "".join([f"<div class='share-stat'><span>{k}</span><strong>{v}</strong></div>" for k,v in stats]) + f"<div style='margin-top:12px'><span class='share-badge'>Score {score}</span>" + ("<span class='share-badge'>Presidente eleito</span>" if st.session_state.victory else "<span class='share-badge'>Tentativa épica</span>") + "</div></div>", unsafe_allow_html=True)
+        st.markdown("<div class='share-preview'>", unsafe_allow_html=True)
+        st.image(svg_bytes, use_container_width=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+        st.download_button("🖼️ Baixar card de compartilhamento (SVG)", data=svg_bytes, file_name="card_candidato_2026.svg", mime="image/svg+xml", use_container_width=True)
     with right:
+        badge_html = ''.join([f"<span class='share-mini'>{k}: <strong>{v}</strong></span>" for k,v in badges])
+        st.markdown("<div class='share-card'><h4 style='margin-top:0'>Resumo rápido</h4>" + badge_html + "<div style='margin-top:12px' class='small-muted'>Imagem pronta para postar. O texto abaixo já está simplificado para acompanhar o card.</div></div>", unsafe_allow_html=True)
         st.markdown(f"<div class='share-box'>{summary}</div>", unsafe_allow_html=True)
-        st.code(summary, language=None)
-        b1,b2,b3,b4 = st.columns(4)
+        b1,b2,b3 = st.columns(3)
         with b1:
             st.link_button("WhatsApp", urls["whatsapp"], use_container_width=True)
         with b2:
             st.link_button("Telegram", urls["telegram"], use_container_width=True)
         with b3:
             st.link_button("X", urls["x"], use_container_width=True)
-        with b4:
-            st.link_button("Facebook", urls["facebook"], use_container_width=True)
-        st.download_button("⬇️ Baixar resultado em TXT", data=summary.encode("utf-8"), file_name="resultado_candidato_2026.txt", mime="text/plain", use_container_width=True)
+
 
 def render_result():
     if st.session_state.victory:
@@ -1878,7 +1976,7 @@ def main():
     st.markdown(
         f"""
         <div class="hero">
-            <h1>🇧🇷 Corrida ao Planalto • V7</h1>
+            <h1>🇧🇷 Corrida ao Planalto • V8</h1>
             <p>Dia {st.session_state.day} de {st.session_state.total_days} • {PARTIES[st.session_state.party]['nome']} • {ADVISORS[st.session_state.advisor]['nome']}</p>
         </div>
         """,
