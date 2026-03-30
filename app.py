@@ -1,6 +1,7 @@
 
 import math
 import random
+from urllib.parse import quote
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
@@ -11,7 +12,7 @@ import streamlit as st
 # CONFIGURAÇÃO
 # =========================================================
 st.set_page_config(
-    page_title="🇧🇷 Candidato 2026: Brasil em Jogo V6",
+    page_title="🇧🇷 Candidato 2026: Brasil em Jogo V7",
     page_icon="🗳️",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -21,21 +22,23 @@ STYLE = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 :root{
-    --bg:#f5f7f4;
+    --bg:#eef3ee;
     --panel:#ffffff;
-    --ink:#102219;
-    --muted:#486154;
-    --green:#0f5f3d;
-    --green-2:#12824f;
-    --yellow:#f2c94c;
-    --yellow-2:#d9a404;
-    --blue:#0a4ea3;
-    --blue-2:#173d7a;
+    --ink:#0d1b14;
+    --muted:#dbe7df;
+    --muted-dark:#4b6256;
+    --green:#0b6b3a;
+    --green-2:#179b58;
+    --yellow:#ffcf33;
+    --yellow-2:#c99700;
+    --blue:#0f4ea8;
+    --blue-2:#0a2f6b;
     --red:#c53a2f;
-    --shadow:0 14px 34px rgba(16,34,25,.10);
-    --shadow-strong:0 18px 42px rgba(10,78,163,.18);
-    --border:1px solid rgba(16,34,25,.08);
+    --shadow:0 14px 34px rgba(13,27,20,.10);
+    --shadow-strong:0 18px 42px rgba(10,78,163,.22);
+    --border:1px solid rgba(13,27,20,.08);
 }
+
 html, body, [class*="css"] { font-family: 'Inter', sans-serif; color:var(--ink); }
 body{background:var(--bg);}
 .main { background: radial-gradient(circle at top, #f8fbf6 0%, #eef4ef 55%, #edf2f8 100%); }
@@ -51,13 +54,14 @@ section[data-testid="stSidebar"] *{ color:#f8fffb; }
 .hero h1{margin:0 0 6px 0; font-size:2.25rem; letter-spacing:-.02em;}
 .hero p{margin:0; opacity:.96; max-width:900px;}
 .panel{background:linear-gradient(180deg,#ffffff 0%, #fbfdfb 100%); border-radius:20px; padding:18px; border:var(--border); box-shadow:var(--shadow);}
-.metric-card{background:linear-gradient(160deg, #ffffff 0%, #f8fbf6 100%); color:var(--ink); border-radius:20px; padding:16px; min-height:118px; box-shadow:var(--shadow); border-top:5px solid var(--green);}
-.metric-card.card-gold{border-top-color:var(--yellow-2);}
-.metric-card.card-blue{border-top-color:var(--blue);}
-.metric-card.card-red{border-top-color:var(--red);}
-.metric-card h4{margin:0; color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.10em;}
-.metric-card h2{margin:8px 0 6px 0; font-size:28px; line-height:1.05; color:var(--ink);}
-.metric-card span{font-size:12px; color:var(--muted);}
+.metric-card{background:linear-gradient(135deg, #0b6b3a 0%, #094d2a 100%); color:#ffffff; border-radius:20px; padding:16px; min-height:126px; box-shadow:var(--shadow-strong); border:1px solid rgba(255,255,255,.08); position:relative; overflow:hidden;}
+.metric-card:before{content:''; position:absolute; inset:auto -16px -18px auto; width:90px; height:90px; border-radius:50%; background:rgba(255,255,255,.08);}
+.metric-card.card-gold{background:linear-gradient(135deg,#b68600 0%,#7b5a00 100%);}
+.metric-card.card-blue{background:linear-gradient(135deg,#0f4ea8 0%,#0a2f6b 100%);}
+.metric-card.card-red{background:linear-gradient(135deg,#b3362c 0%,#7f1e17 100%);}
+.metric-card h4{margin:0; color:rgba(255,255,255,.82); font-size:11px; text-transform:uppercase; letter-spacing:.10em;}
+.metric-card h2{margin:8px 0 6px 0; font-size:29px; line-height:1.05; color:#ffffff; text-shadow:0 1px 2px rgba(0,0,0,.18);}
+.metric-card span{font-size:12px; color:rgba(255,255,255,.84);}
 .event-box{background:linear-gradient(180deg,#ffffff 0%,#fbfdfb 100%); border-left:10px solid var(--blue); border-radius:24px; padding:24px; margin-bottom:18px; box-shadow:var(--shadow); border:var(--border);}
 .event-crisis{border-left-color:var(--red);}
 .event-good{border-left-color:var(--green-2);}
@@ -77,6 +81,11 @@ section[data-testid="stSidebar"] *{ color:#f8fffb; }
 .success-strip{background:linear-gradient(135deg,#0d6b41 0%,#18a05d 100%); color:white; padding:15px 18px; border-radius:16px; font-weight:700; box-shadow:var(--shadow);}
 .warning-strip{background:linear-gradient(135deg,#b53328 0%,#df5144 100%); color:white; padding:15px 18px; border-radius:16px; font-weight:700; box-shadow:var(--shadow);}
 .transition-strip{background:linear-gradient(135deg,#0a4ea3 0%,#173d7a 100%); color:white; padding:15px 18px; border-radius:16px; font-weight:700; box-shadow:var(--shadow);}
+.share-card{background:linear-gradient(135deg,#ffffff 0%,#f7fbf8 100%); border:1px solid rgba(13,27,20,.08); border-radius:20px; padding:18px; box-shadow:var(--shadow);}
+.share-stat{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px dashed rgba(13,27,20,.10);font-size:14px;}
+.share-stat:last-child{border-bottom:0;}
+.share-badge{display:inline-block;padding:8px 12px;border-radius:999px;background:linear-gradient(135deg,#0b6b3a 0%,#0f4ea8 100%);color:#fff;font-weight:800;font-size:12px;margin:3px 6px 3px 0;}
+.share-box{background:#0d1b14;color:#f8fff9;border-radius:18px;padding:16px;white-space:pre-wrap;font-size:14px;line-height:1.5;}
 .stButton>button{border-radius:14px !important; font-weight:800 !important; border:0 !important; padding:.7rem 1rem !important; background:linear-gradient(135deg,#0f5f3d 0%,#0a4ea3 100%) !important; color:white !important; box-shadow:0 10px 22px rgba(10,78,163,.20) !important;}
 .stButton>button:hover{transform:translateY(-1px); filter:saturate(1.05);}
 .stSelectbox label, .stNumberInput label{font-weight:700 !important; color:var(--ink) !important;}
@@ -1123,10 +1132,10 @@ def generate_event():
             w += 0.8
         if e.category == "digital" and st.session_state.viral > 26:
             w += 0.4
-        if e.category == "financas" and st.session_state.cash < 60000:
-            w += 0.7
-        if e.category == "energia" and st.session_state.energy < 38:
-            w += 0.8
+        if e.category == "financas" and st.session_state.cash < 85000:
+            w += 0.85
+        if e.category == "energia" and st.session_state.energy < 58:
+            w += 1.2
         if e.category == "politica" and st.session_state.allies < 42:
             w += 0.6
         if e.category == "pesquisa" and st.session_state.day > 18:
@@ -1242,8 +1251,8 @@ def daily_cost_model():
     s = st.session_state
     # custo base cresce com a proximidade da eleição, mídia e estrutura
     phase_factor = 1.0 + (s.day / s.total_days) * 0.55
-    operation = 4200 + (s.time_tv * 38) + (s.allies * 22) + (s.media * 18)
-    burn = operation * 0.20 * phase_factor
+    operation = 3600 + (s.time_tv * 30) + (s.allies * 18) + (s.media * 14)
+    burn = operation * 0.19 * phase_factor
     if s.difficulty == "Difícil":
         burn *= 1.08
     elif s.difficulty == "Hardcore":
@@ -1251,9 +1260,13 @@ def daily_cost_model():
     s.cash = max(0.0, s.cash - burn)
 
     # energia: sobe e desce conforme qualidade da gestão
-    energy_drop = 2.4 + (s.media / 80) + (s.day / s.total_days) * 1.8
-    if s.energy < 30:
-        energy_drop -= 0.6
+    energy_drop = 1.55 + (s.media / 110) + (s.day / s.total_days) * 1.15
+    if s.energy < 42:
+        energy_drop -= 0.45
+    if s.allies > 55:
+        energy_drop -= 0.18
+    if s.cash > 140000:
+        energy_drop -= 0.12
     s.energy = clamp(s.energy - energy_drop, 0, 100)
 
     # mídia, risco e intenção oscilam com momentum e credibilidade
@@ -1279,8 +1292,10 @@ def daily_cost_model():
     s.rejection = clamp(s.rejection + random.uniform(-0.4, 0.5) + exposure * 0.18 - s.credibility * 0.004, 4, 80)
 
     # pequeno ganho de caixa se campanha estiver muito bem organizada
-    if s.cash < 55000 and s.credibility > 54 and s.risk < 30:
-        s.cash += 5000
+    if s.cash < 65000 and s.credibility > 54 and s.risk < 30:
+        s.cash += 6500
+    if s.energy < 24 and s.credibility > 45:
+        s.energy = clamp(s.energy + 0.8, 0, 100)
 
 
 def unlock_achievements():
@@ -1661,8 +1676,8 @@ def render_start_screen():
     st.markdown(
         f"""
         <div class="hero">
-            <h1>🇧🇷 Candidato 2026: Brasil em Jogo V6</h1>
-            <p>45 turnos, contraste inspirado no Brasil, consequências persistentes, mais de 50 eventos únicos e gancho real para a transição de governo.</p>
+            <h1>🇧🇷 Candidato 2026: Brasil em Jogo V7</h1>
+            <p>45 turnos, contraste Brasil reforçado, consequências persistentes, equilíbrio melhor de energia/caixa, mais de 50 eventos únicos e tela final para compartilhar.</p>
         </div>
         """,
         unsafe_allow_html=True,
@@ -1695,6 +1710,64 @@ def render_start_screen():
         st.rerun()
 
 
+
+
+def build_share_payload():
+    s = st.session_state
+    outcome = "Venci" if s.victory else "Quase cheguei lá"
+    turno = "1º turno" if s.first_turn and s.victory else "2º turno" if s.victory else f"dia {s.day}"
+    score = int(max(0, (s.intent * 1.8) + (100 - s.rejection) + (s.credibility * 0.7) + (s.energy * 0.5) + (min(s.cash, 200000)/4000) - (s.scandals * 8) - (s.risk * 0.6)))
+    summary = (
+        f"🇧🇷 Joguei Candidato 2026 e {outcome}!\n"
+        f"• Resultado: {turno}\n"
+        f"• Intenção final: {s.intent:.1f}%\n"
+        f"• Rejeição final: {s.rejection:.1f}%\n"
+        f"• Caixa final: {fmt_money(s.cash)}\n"
+        f"• Energia final: {s.energy:.0f}%\n"
+        f"• Escândalos: {s.scandals}\n"
+        f"• Score de campanha: {score}\n"
+        f"#Candidato2026 #BrasilEmJogo"
+    )
+    urls = {
+        "whatsapp": f"https://wa.me/?text={quote(summary)}",
+        "telegram": f"https://t.me/share/url?url=&text={quote(summary)}",
+        "x": f"https://twitter.com/intent/tweet?text={quote(summary)}",
+        "facebook": f"https://www.facebook.com/sharer/sharer.php?u=https://example.com&quote={quote(summary)}",
+    }
+    stats = [
+        ("Intenção final", f"{s.intent:.1f}%"),
+        ("Rejeição final", f"{s.rejection:.1f}%"),
+        ("Credibilidade", f"{s.credibility:.0f}"),
+        ("Caixa restante", fmt_money(s.cash)),
+        ("Energia restante", f"{s.energy:.0f}%"),
+        ("Mídia", f"{s.media:.0f}"),
+        ("Risco jurídico", f"{s.risk:.0f}%"),
+        ("Escândalos", str(s.scandals)),
+        ("Combo máximo", f"x{s.max_combo}"),
+    ]
+    return summary, urls, stats, score
+
+
+def render_share_panel():
+    summary, urls, stats, score = build_share_payload()
+    st.markdown("### 📣 Sua tela de compartilhamento")
+    left, right = st.columns([1.05, 1])
+    with left:
+        st.markdown("<div class='share-card'><h4 style='margin-top:0'>Resumo da campanha</h4>" + "".join([f"<div class='share-stat'><span>{k}</span><strong>{v}</strong></div>" for k,v in stats]) + f"<div style='margin-top:12px'><span class='share-badge'>Score {score}</span>" + ("<span class='share-badge'>Presidente eleito</span>" if st.session_state.victory else "<span class='share-badge'>Tentativa épica</span>") + "</div></div>", unsafe_allow_html=True)
+    with right:
+        st.markdown(f"<div class='share-box'>{summary}</div>", unsafe_allow_html=True)
+        st.code(summary, language=None)
+        b1,b2,b3,b4 = st.columns(4)
+        with b1:
+            st.link_button("WhatsApp", urls["whatsapp"], use_container_width=True)
+        with b2:
+            st.link_button("Telegram", urls["telegram"], use_container_width=True)
+        with b3:
+            st.link_button("X", urls["x"], use_container_width=True)
+        with b4:
+            st.link_button("Facebook", urls["facebook"], use_container_width=True)
+        st.download_button("⬇️ Baixar resultado em TXT", data=summary.encode("utf-8"), file_name="resultado_candidato_2026.txt", mime="text/plain", use_container_width=True)
+
 def render_result():
     if st.session_state.victory:
         st.markdown(f"<div class='success-strip'>✅ {st.session_state.result_text}</div>", unsafe_allow_html=True)
@@ -1710,6 +1783,8 @@ def render_result():
         f"**Caixa restante:** {fmt_money(st.session_state.cash)} | "
         f"**Escândalos:** {st.session_state.scandals}"
     )
+
+    render_share_panel()
 
     if st.session_state.victory:
         st.markdown(
@@ -1803,7 +1878,7 @@ def main():
     st.markdown(
         f"""
         <div class="hero">
-            <h1>🇧🇷 Corrida ao Planalto • V6</h1>
+            <h1>🇧🇷 Corrida ao Planalto • V7</h1>
             <p>Dia {st.session_state.day} de {st.session_state.total_days} • {PARTIES[st.session_state.party]['nome']} • {ADVISORS[st.session_state.advisor]['nome']}</p>
         </div>
         """,
