@@ -13,10 +13,10 @@ import streamlit as st
 # CONFIGURAÇÃO
 # =========================================================
 st.set_page_config(
-    page_title="🇧🇷 Candidato 2026: Brasil em Jogo V8",
+    page_title="🇧🇷 Corrida ao Planalto • V10",
     page_icon="🗳️",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
 )
 
 STYLE = """
@@ -100,6 +100,38 @@ section[data-testid="stSidebar"] *{color:#f7fffa;}
 .stButton>button:hover{transform:translateY(-1px); filter:saturate(1.05);}
 .stSelectbox label, .stNumberInput label{font-weight:700 !important; color:var(--ink) !important;}
 hr{border-color:rgba(16,34,25,.08);}
+[data-testid="stHorizontalBlock"]{gap:.85rem;}
+[data-testid="stMetricValue"]{font-weight:800;}
+@media (max-width: 1080px){
+    .block-container{max-width:100%; padding-top:.75rem; padding-left:1rem; padding-right:1rem;}
+    .hero{padding:24px 20px 22px 20px; border-radius:24px;}
+    .hero h1{font-size:1.85rem;}
+    .metric-card{min-height:120px; padding:14px;}
+    .metric-card h2{font-size:24px;}
+}
+@media (max-width: 768px){
+    .block-container{padding-top:.5rem; padding-left:.8rem; padding-right:.8rem; padding-bottom:1.2rem;}
+    .hero{padding:20px 16px 18px 16px; border-radius:20px; margin-bottom:14px;}
+    .hero h1{font-size:1.55rem; line-height:1.12;}
+    .hero p{font-size:.95rem; line-height:1.5;}
+    .panel,.event-box,.share-card,.share-preview,.consequence-wrap{border-radius:18px; padding:14px;}
+    .metric-card{min-height:108px; border-radius:18px; padding:13px 12px 12px 12px;}
+    .metric-card h4{font-size:10px;}
+    .metric-card h2{font-size:22px; margin:6px 0 4px 0;}
+    .metric-card span{font-size:11px; line-height:1.35;}
+    .choice-box{padding:14px; border-radius:16px;}
+    .choice-title{font-size:.96rem; line-height:1.4;}
+    .small-muted{font-size:12px;}
+    .effect-chip{font-size:11px; padding:6px 9px;}
+    .consequence-card{padding:13px 14px; border-radius:16px;}
+    .consequence-card .cons-title{font-size:13px;}
+    .consequence-card .cons-desc{font-size:12px;}
+    .consequence-card .cons-meta{font-size:10px;}
+    .share-box{font-size:13px; padding:14px; border-radius:14px;}
+    .share-mini{font-size:11px; padding:7px 10px;}
+    .region-row{margin-bottom:8px;}
+    .stButton>button,.stDownloadButton>button,[data-testid="baseButton-link"]{min-height:48px !important; font-size:.95rem !important; border-radius:14px !important;}
+}
 </style>
 """
 st.markdown(STYLE, unsafe_allow_html=True)
@@ -1602,18 +1634,26 @@ def readiness_score():
 # UI
 # =========================================================
 def render_metric_cards():
-    c1, c2, c3, c4, c5, c6 = st.columns(6)
-    cards = [
-        (c1, "INTENÇÃO", f"{st.session_state.intent:.1f}%", "Pesquisa do dia", "card-intent"),
-        (c2, "REJEIÇÃO", f"{st.session_state.rejection:.1f}%", "Quanto menor, melhor", "card-reject"),
-        (c3, "CAIXA", fmt_money(st.session_state.cash), "Operação viva", "card-cash"),
-        (c4, "MÍDIA", f"{st.session_state.media:.0f}", "TV, rádio e corte", "card-media"),
-        (c5, "RISCO", f"{st.session_state.risk:.0f}%", "Jurídico e crise", "card-risk"),
-        (c6, "ENERGIA", f"{st.session_state.energy:.0f}%", "Fôlego real", "card-energy"),
+    rows = [
+        [
+            ("INTENÇÃO", f"{st.session_state.intent:.1f}%", "Pesquisa do dia", "card-intent"),
+            ("REJEIÇÃO", f"{st.session_state.rejection:.1f}%", "Quanto menor, melhor", "card-reject"),
+            ("CAIXA", fmt_money(st.session_state.cash), "Operação viva", "card-cash"),
+        ],
+        [
+            ("MÍDIA", f"{st.session_state.media:.0f}", "TV, rádio e corte", "card-media"),
+            ("RISCO", f"{st.session_state.risk:.0f}%", "Jurídico e crise", "card-risk"),
+            ("ENERGIA", f"{st.session_state.energy:.0f}%", "Fôlego real", "card-energy"),
+        ],
     ]
-    for col, title, value, desc, klass in cards:
-        with col:
-            st.markdown(f"<div class='metric-card {klass}'><h4>{title}</h4><h2>{value}</h2><span>{desc}</span></div>", unsafe_allow_html=True)
+    for row in rows:
+        cols = st.columns(3)
+        for col, (title, value, desc, klass) in zip(cols, row):
+            with col:
+                st.markdown(
+                    f"<div class='metric-card {klass}'><h4>{title}</h4><h2>{value}</h2><span>{desc}</span></div>",
+                    unsafe_allow_html=True,
+                )
 
 
 def sidebar_panel():
@@ -1771,8 +1811,8 @@ def render_start_screen():
     st.markdown(
         f"""
         <div class="hero">
-            <h1>🇧🇷 Candidato 2026: Brasil em Jogo V8</h1>
-            <p>45 turnos, eventos únicos sem repetição, aberturas mais originais, contraste Brasil reforçado, energia e caixa mais equilibrados e card final para viralizar.</p>
+            <h1>🇧🇷 Candidato 2026: Brasil em Jogo V10</h1>
+            <p>45 turnos, eventos únicos sem repetição, visual mais responsivo para celular, contraste Brasil reforçado, energia e caixa equilibrados e campanha pronta para viralizar.</p>
         </div>
         """,
         unsafe_allow_html=True,
@@ -1789,7 +1829,7 @@ def render_start_screen():
         difficulty = st.selectbox("Dificuldade", options=["Fácil", "Normal", "Difícil", "Hardcore"], index=1)
         seed = st.number_input("Seed da campanha", min_value=1, max_value=999999, value=2026, step=1)
 
-    st.markdown("### O que muda nesta V8")
+    st.markdown("### O que muda nesta V10")
     st.markdown(
         "- Mais de **50 eventos únicos** na rotação normal.\n"
         "- **45 turnos sem repetição** do mesmo evento.\n"
@@ -1798,7 +1838,8 @@ def render_start_screen():
         "- **Regiões, segmentos, mídia, aliados e risco jurídico** integrados.\n"
         "- **1º e 2º turno** com voto útil na reta final.\n"
         "- **Visual com contraste Brasil**: verde, amarelo e azul mais limpos.\n"
-        "- **Transição pós-vitória** para começar a evolução presidencial."
+        "- **Transição pós-vitória** para começar a evolução presidencial.\n"
+        "- **Layout responsivo** mais bem enquadrado para celular."
     )
     if st.button("🚀 Iniciar campanha", use_container_width=True):
         start_campaign(party, advisor, difficulty, int(seed))
@@ -1998,7 +2039,7 @@ def main():
     st.markdown(
         f"""
         <div class="hero">
-            <h1>🇧🇷 Corrida ao Planalto • V9</h1>
+            <h1>🇧🇷 Corrida ao Planalto • V10</h1>
             <p>Dia {min(st.session_state.day, st.session_state.total_days)} de {st.session_state.total_days} • {PARTIES[st.session_state.party]['nome']} • {ADVISORS[st.session_state.advisor]['nome']}</p>
         </div>
         """,
